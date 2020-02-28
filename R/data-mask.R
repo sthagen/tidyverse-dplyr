@@ -112,7 +112,9 @@ DataMask <- R6Class("DataMask",
     },
 
     pick = function(vars) {
-      eval_tidy(quo(tibble(!!!syms(vars))), private$mask)
+      cols <- env_get_list(private$bindings, vars)
+      nrow <- length(self$current_rows())
+      new_tibble(cols, nrow = nrow)
     },
 
     current_rows = function() {
