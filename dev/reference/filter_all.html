@@ -199,7 +199,7 @@ with all_vars() or any_vars() and should mention the pronoun
     <div class="ref-description">
     <p><a href='https://www.tidyverse.org/lifecycle/#retired'><img src='figures/lifecycle-retired.svg' alt='Retired lifecycle'></a></p>
 <p>Scoped verbs (<code>_if</code>, <code>_at</code>, <code>_all</code>) have been superseded by the use of
-<code><a href='across.html'>across()</a></code> in an existing verb. See <code>vignette("colwise")</code> for details.</p>
+<code><a href='across.html'>across()</a></code> in an existing verb. See <code><a href='../articles/colwise.html'>vignette("colwise")</a></code> for details.</p>
 <p>These <a href='scoped.html'>scoped</a> filtering verbs apply a predicate expression to a
 selection of variables. The predicate expression should be quoted
 with <code><a href='all_vars.html'>all_vars()</a></code> or <code><a href='all_vars.html'>any_vars()</a></code> and should mention the pronoun
@@ -262,12 +262,12 @@ into account to determine filtered rows.</p>
 <span class='co'># replicate it over all variables. This expression should be quoted</span>
 <span class='co'># with all_vars() or any_vars():</span>
 <span class='fu'><a href='all_vars.html'>all_vars</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/NA.html'>is.na</a></span>(<span class='no'>.</span>))</div><div class='output co'>#&gt; &lt;predicate intersection&gt;
-#&gt; &lt;quosure&gt;
-#&gt; expr: ^is.na(.)
-#&gt; env:  0x9a837d0</div><div class='input'><span class='fu'><a href='all_vars.html'>any_vars</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/NA.html'>is.na</a></span>(<span class='no'>.</span>))</div><div class='output co'>#&gt; &lt;predicate union&gt;
-#&gt; &lt;quosure&gt;
-#&gt; expr: ^is.na(.)
-#&gt; env:  0x9a837d0</div><div class='input'>
+#&gt; <span style='font-weight: bold;'>&lt;quosure&gt;</span><span>
+#&gt; expr: </span><span style='color: #0000BB;'>^is.na(.)</span><span>
+#&gt; env:  </span><span style='color: #0000BB;'>0x7fbbde386ec0</span><span></div><div class='input'><span class='fu'><a href='all_vars.html'>any_vars</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/NA.html'>is.na</a></span>(<span class='no'>.</span>))</div><div class='output co'>#&gt; &lt;predicate union&gt;
+#&gt; </span><span style='font-weight: bold;'>&lt;quosure&gt;</span><span>
+#&gt; expr: </span><span style='color: #0000BB;'>^is.na(.)</span><span>
+#&gt; env:  </span><span style='color: #0000BB;'>0x7fbbde386ec0</span><span></div><div class='input'>
 
 <span class='co'># You can take the intersection of the replicated expressions:</span>
 <span class='fu'>filter_all</span>(<span class='no'>mtcars</span>, <span class='fu'><a href='all_vars.html'>all_vars</a></span>(<span class='no'>.</span> <span class='kw'>&gt;</span> <span class='fl'>150</span>))</div><div class='output co'>#&gt;  [1] mpg  cyl  disp hp   drat wt   qsec vs   am   gear carb
@@ -333,9 +333,9 @@ into account to determine filtered rows.</p>
 #&gt; Toyota Corolla 33.9   4  71.1  65 4.22 1.835 19.90  1  1    4    1
 #&gt; Fiat X1-9      27.3   4  79.0  66 4.08 1.935 18.90  1  1    4    1
 #&gt; Lotus Europa   30.4   4  95.1 113 3.77 1.513 16.90  1  1    5    2
-#&gt; Volvo 142E     21.4   4 121.0 109 4.11 2.780 18.60  1  1    4    2</div></pre>
+#&gt; Volvo 142E     21.4   4 121.0 109 4.11 2.780 18.60  1  1    4    2</div></span></pre>
   </div>
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
