@@ -158,6 +158,16 @@ new_grouped_df <- function(x, groups, ..., class = character()) {
 #' @rdname new_grouped_df
 #' @export
 validate_grouped_df <- function(x, check_bounds = FALSE) {
+  if (is.null(attr(x, "groups")) && !is.null(attr(x, "vars"))) {
+    abort(
+      c(
+        "Corrupt `grouped_df` using old (< 0.8.0) format",
+        i = "Strip off old grouping with `ungroup()`"
+      ),
+      class = "dplyr_grouped_df_corrupt"
+    )
+  }
+
   result <- .Call(`dplyr_validate_grouped_df`, x, check_bounds)
   if (!is.null(result)) {
     abort(result, class = "dplyr_grouped_df_corrupt")
@@ -210,7 +220,7 @@ as_tibble.grouped_df <- function(x, ...) {
   if (drop) {
     as_tibble(out)
   } else {
-    groups <- intersect(names(out), group_vars(x))
+    groups <- group_intersect(x, out)
     if ((missing(i) || nargs() == 2) && identical(groups, group_vars(x))) {
       new_grouped_df(out, group_data(x))
     } else {
@@ -223,7 +233,7 @@ as_tibble.grouped_df <- function(x, ...) {
 `$<-.grouped_df` <- function(x, name, ..., value) {
   out <- NextMethod()
   if (name %in% group_vars(x)) {
-    grouped_df(out, intersect(names(out), group_vars(x)), group_by_drop_default(x))
+    grouped_df(out, group_intersect(x, out), group_by_drop_default(x))
   } else {
     out
   }
@@ -232,13 +242,13 @@ as_tibble.grouped_df <- function(x, ...) {
 #' @export
 `[<-.grouped_df` <- function(x, i, j, ..., value) {
   out <- NextMethod()
-  grouped_df(out, intersect(names(out), group_vars(x)), group_by_drop_default(x))
+  grouped_df(out, group_intersect(x, out), group_by_drop_default(x))
 }
 
 #' @export
 `[[<-.grouped_df` <- function(x, ..., value) {
   out <- NextMethod()
-  grouped_df(out, intersect(names(out), group_vars(x)), group_by_drop_default(x))
+  grouped_df(out, group_intersect(x, out), group_by_drop_default(x))
 }
 
 #' @export
@@ -247,7 +257,7 @@ as_tibble.grouped_df <- function(x, ...) {
   names(data) <- value
 
   groups <- group_data(x)
-  group_loc <- match(intersect(names(x), names(groups)), names(x))
+  group_loc <- match(intersect(names(groups), names(x)), names(x))
   group_names <- c(value[group_loc], ".rows")
   if (!identical(group_names, names(groups))) {
     names(groups) <- c(value[group_loc], ".rows")
@@ -287,5 +297,9 @@ vec_split_id_order <- function(x) {
   split_id <- vec_group_loc(x)
   split_id$loc <- new_list_of(split_id$loc, ptype = integer())
   vec_slice(split_id, vec_order(split_id$key))
+}
+
+group_intersect <- function(x, new) {
+  intersect(group_vars(x), names(new))
 }
 

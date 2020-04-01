@@ -60,11 +60,12 @@ lag <- function(x, n = 1L, default = NA, order_by = NULL, ...) {
   }
   if (n == 0) return(x)
 
-  xlen <- length(x)
+  xlen <- vec_size(x)
   n <- pmin(n, xlen)
 
+  default <- vec_cast(default, x, x_arg = "default", to_arg = "x")
   vec_c(
-    vec_repeat(default, n),
+    vec_rep(default, n),
     vec_slice(x, seq_len(xlen - n))
   )
 }
@@ -83,11 +84,12 @@ lead <- function(x, n = 1L, default = NA, order_by = NULL, ...) {
   }
   if (n == 0) return(x)
 
-  xlen <- length(x)
+  xlen <- vec_size(x)
   n <- pmin(n, xlen)
 
+  default <- vec_cast(default, x, x_arg = "default", to_arg = "x")
   vec_c(
     vec_slice(x, -seq_len(n)),
-    vec_repeat(default, n)
+    vec_rep(default, n)
   )
 }

@@ -4,13 +4,14 @@
 
 * `bind_cols()` no longer converts to a tibble, returns a data frame if the input is a data frame.
 
-* `bind_rows()` and `combine()` use vctrs coercion rules.
+* `bind_rows()`, `*_join()`, `summarise()` and `mutate()` use vctrs coercion 
+  rules. There are two main user facing changes:
 
-    * Combining factor and character creates a character without warning, combining factors creates a factor with levels combined.
-
-    * For time columns, the time zone of the first argument is used.
-    
-    * Classed atomic vectors are no longer accepted, `vctrs::vec_is()` is required for all inputs.
+    * Combining factor and character vectors silently creates a character 
+      vector; previously it created a character vector with a warning.
+      
+    * Combining multiple factors creates a factor with combined levels;
+      previously it created a character vector with a warning.
 
 * `bind_rows()` and other functions use vctrs name repair, see `?vctrs::vec_as_names`.
 
@@ -36,6 +37,8 @@
 
 * The old data format for `grouped_df` is no longer supported. This may affect you if you have serialized grouped data frames to disk, e.g. with `saveRDS()` or when using knitr caching.
 
+* `lead()` and `lag()` are stricter about their inputs. 
+
 ## New features
 
 * The `cur_` functions (`cur_data()`, `cur_group()`, `cur_group_id()`, 
@@ -52,7 +55,8 @@
   (e.g. `is.character`) to select variables by type (#4680). It also makes
   it possible to use `select()` and `rename()` to repair data frames with
   duplicated names (#4615) and prevents you from accidentally introducing
-  duplicate names (#4643).
+  duplicate names (#4643). This also means that dplyr now re-exports `any_of()`
+  and `all_of()` (#5036).
 
 * `slice()` gains a new set of helpers:
 
@@ -108,17 +112,15 @@
 
 ## rowwise()
 
-* New, experimental, `condense()` makes it easy to create and use list-columns.
-  It is similar to `summarise()` but it always returns a single row per group
-  and it wraps each new column in a list. It returns a `rowwise` tibble so you 
-  can work with list-columns without having to manually vectorise your code 
-  with purrr map functions (#4723).
-
 * `rowwise()` is no longer questioning; we now understand that it's an
   important tool when you don't have vectorised code. It now also allows you to
   specify additional variables that should be preserved in the output when 
   summarising (#4723). The rowwise-ness is preserved by all operations;
   you need to explicit drop it with `as_tibble()` or `group_by()`.
+
+* New, experimental, `nest_by()`. It has the same interface as `group_by()`,
+  but returns a rowwise data frame of grouping keys, supplemental with a 
+  list-column of data frames containing the rest of the data.
 
 ## vctrs
 
@@ -324,6 +326,9 @@
   it prevents you from creating a new grouping var called `add` and
   it violates our naming conventions (#4137).
 
+* `intersect()`, `union()`, `setdiff()` and `setequal()` generics are now
+  imported from the generics package. This reduces a conflict with lubridate.
+
 * `order_by()` gives an informative hint if you accidentally call it instead
   of `arrange()` #3357.
 
@@ -346,6 +351,8 @@
 
 * `rename_at()` and `rename_all()` call the function with a simple character
   vector, not a `dplyr_sel_vars` (#4459).
+
+* `ntile()` is now more consistent with database implementations if the buckets have irregular size (#4495).
 
 
 # dplyr 0.8.5 (2020-03-07)
