@@ -53,6 +53,8 @@
   about the "current" group in dplyr verbs. They are inspired by 
   data.table's `.SD`, `.GRP`, `.BY`, and `.I`.
 
+* The `rows_` functions (`rows_insert()`, `rows_update()`, `rows_upsert()`, `rows_patch()`, `rows_delete()`) provide a new API to insert and delete rows from a second data frame or table. Support for updating mutable backends is planned (#4654).
+
 * `mutate()` and `summarise()` create multiple columns from a single expression
   if you return a data frame (#2326).
 
@@ -299,7 +301,8 @@
   the whole we believe those failures to either reflect unexpected behaviour
   or tests that need to be strengthened (#2751).
 
-* `count()` and `add_count()` now preserve the type of the input (#4086).
+* `count()` and `add_count()` do a better job of preserving input class
+  and attributes (#4086).
 
 * `distinct()` errors if you request it use variables that don't exist
   (this was previously a warning) (#4656).
