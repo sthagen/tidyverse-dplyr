@@ -191,12 +191,45 @@ dplyr_reconstruct.data.frame <- function(data, template) {
 
 #' @export
 dplyr_reconstruct.grouped_df <- function(data, template) {
-  group_vars <- intersect(group_vars(template), names(data))
+  group_vars <- group_intersect(template, data)
   grouped_df(data, group_vars, drop = group_by_drop_default(template))
 }
 
 #' @export
-dplyr_reconstruct.rowwise <- function(data, template) {
-  group_vars <- intersect(group_vars(template), names(data))
-  rowwise(grouped_df(data, group_vars))
+dplyr_reconstruct.rowwise_df <- function(data, template) {
+  group_vars <- group_intersect(template, data)
+  rowwise_df(data, group_vars)
+}
+
+dplyr_col_select <- function(.data, loc, names = NULL) {
+  loc <- vec_as_location(loc, n = ncol(.data), names = names(.data))
+  out <- .data[loc]
+  if (!inherits(out, "data.frame")) {
+    abort(c(
+      "Can't reconstruct data frame.",
+      x = glue("The `[` method for class <{classes_data}> must return a data frame.",
+        classes_data = glue_collapse(class(.data), sep = "/")
+      ),
+      i = glue("It returned a <{classes_out}>.",
+        classes_out = glue_collapse(class(out), sep = "/")
+      )
+    ))
+  }
+  if (length(out) != length(loc)) {
+    abort(c(
+      "Can't reconstruct data frame.",
+      x = glue("The `[` method for class <{classes_data}> must return a data frame with {length(loc)} column{s}.",
+        classes_data = glue_collapse(class(.data), sep = "/"),
+        s = if(length(loc) == 1) "" else "s"
+      ),
+      i = glue("It returned a <{classes_out}> of {length(out)} column{s}.",
+        classes_out = glue_collapse(class(out), sep = "/"),
+        s = if(length(out) == 1) "" else "s"
+      )
+    ))
+  }
+  if (!is.null(names)) {
+    names(out) <- names
+  }
+  out
 }

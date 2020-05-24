@@ -4,14 +4,16 @@
 #' `across()` makes it easy to apply the same transformation to multiple
 #' columns, allowing you to use [select()] semantics inside in [summarise()] and
 #' [mutate()]. `across()` supersedes the family of "scoped variants" like
-#' `summarise_at()`, `summarise_if()`, and `summarise_all()`.
-#'
-#' See `vignette("colwise")` for more details.
+#' `summarise_at()`, `summarise_if()`, and `summarise_all()`. See
+#' `vignette("colwise")` for more details.
 #'
 #' `c_across()` is designed to work with [rowwise()] to make it easy to
-#' perform rowwise aggregations; it works like `c()` but uses tidy select
-#' semantics so you can easily select multiple variables. See
-#' `vignette("rowwise")` for more details.
+#' perform row-wise aggregations. It has two differences from `c()`:
+#'
+#' * It uses tidy select semantics so you can easily select multiple variables.
+#'   See `vignette("rowwise")` for more details.
+#'
+#' * It uses [vctrs::vec_c()] in order to give safer outputs.
 #'
 #' @param cols,.cols <[`tidy-select`][dplyr_tidy_select]> Columns to transform.
 #'   Because `across()` is used within functions like `summarise()` and
@@ -43,7 +45,7 @@
 #'   summarise(across(starts_with("Sepal"), mean))
 #' iris %>%
 #'   as_tibble() %>%
-#'   mutate(across(is.factor, as.character))
+#'   mutate(across(where(is.factor), as.character))
 #'
 #' # A purrr-style formula
 #' iris %>%
@@ -80,6 +82,9 @@ across <- function(.cols = everything(), .fns = NULL, ..., .names = NULL) {
   setup <- across_setup({{ .cols }}, fns = .fns, names = .names, key = key)
 
   vars <- setup$vars
+  if (length(vars) == 0L) {
+    return(new_tibble(list(), nrow = 1L))
+  }
   fns <- setup$fns
   names <- setup$names
 

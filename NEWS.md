@@ -46,6 +46,8 @@
   Input must be a vector, not a `<data.frame/...>` object
   ```
 
+* `right_join()` no longer sorts the rows of the resulting tibble according to the order of the RHS `by` argument in tibble `y`.
+
 ## New features
 
 * The `cur_` functions (`cur_data()`, `cur_group()`, `cur_group_id()`, 
@@ -302,6 +304,8 @@
   This is likely to cause new test failures in downstream packages; but on
   the whole we believe those failures to either reflect unexpected behaviour
   or tests that need to be strengthened (#2751).
+
+* `coalesce()` now uses vctrs recycling and common type coercion rules (#5186).
 
 * `count()` and `add_count()` do a better job of preserving input class
   and attributes (#4086).

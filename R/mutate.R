@@ -187,11 +187,11 @@ mutate.data.frame <- function(.data, ...,
   } else if (keep == "unused") {
     unused <- c(names(.data)[!attr(cols, "used")])
     keep <- intersect(names(out), c(unused, names(cols)))
-    out[keep]
+    dplyr_col_select(out, keep)
   } else if (keep == "used") {
     used <- names(.data)[attr(cols, "used")]
     keep <- intersect(names(out), c(used, names(cols)))
-    out[keep]
+    dplyr_col_select(out, keep)
   } else if (keep == "none") {
     keep <- c(
       # ensure group vars present
@@ -199,7 +199,7 @@ mutate.data.frame <- function(.data, ...,
       # cols might contain NULLs
       intersect(names(cols), names(out))
     )
-    out[keep]
+    dplyr_col_select(out, keep)
   }
 }
 
@@ -329,7 +329,7 @@ mutate_cols <- function(.data, ...) {
     } else if(inherits(e, "dplyr:::error_mutate_incompatible_combine")) {
       stop_combine(e$parent, index = i, dots = dots, fn = "mutate")
     } else {
-      stop_dplyr(i, dots, fn = "mutate", problem = conditionMessage(e))
+      stop_dplyr(i, dots, fn = "mutate", problem = conditionMessage(e), parent = e)
     }
   })
 

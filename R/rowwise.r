@@ -4,8 +4,9 @@
 #' `rowwise()` allows you to compute on a data frame a row-at-a-time.
 #' This is most useful when a vectorised function doesn't exist.
 #'
-#' A row-wise tibble maintains its row-wise status until explicitly removed
-#' by [group_by()], [ungroup()], or [as_tibble()].
+#' Most dplyr verbs preserve row-wise grouping. The exception is [summarise()],
+#' which return a [grouped_df]. You can explicitly ungroup with [ungroup()]
+#' or [as_tibble()], or convert to a [grouped_df] with [group_by()].
 #'
 #' @section List-columns:
 #' Because a rowwise has exactly one row per group it offers a small
@@ -24,6 +25,8 @@
 #'   instead you can select multiple variables with (e.g.) `everything()`.
 #' @seealso [nest_by()] for a convenient way of creating rowwwise data frames
 #'   with nested data.
+#' @return A row-wise data frame with class `rowwise_df`. Note that a
+#'   `rowwise_df` is implicitly grouped by row, but is not a `grouped_df`.
 #' @export
 #' @examples
 #' df <- tibble(x = runif(6), y = runif(6), z = runif(6))
