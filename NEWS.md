@@ -1,4 +1,4 @@
-# dplyr 1.0.0 (in development)
+# dplyr 1.0.0
 
 ## Breaking changes
 
@@ -34,7 +34,6 @@
   
   Fix by prefixing with `dplyr::` as in `dplyr::mutate(mtcars, x = dplyr::n())`
   
-
 * The old data format for `grouped_df` is no longer supported. This may affect you if you have serialized grouped data frames to disk, e.g. with `saveRDS()` or when using knitr caching.
 
 * `lead()` and `lag()` are stricter about their inputs. 
@@ -62,8 +61,8 @@
 
 * `select()` and `rename()` use the latest version of the tidyselect interface.
   Practically, this means that you can now combine selections using Boolean
-  logic (i.e. `!`, `&` and `|`), and use predicate functions 
-  (e.g. `is.character`) to select variables by type (#4680). It also makes
+  logic (i.e. `!`, `&` and `|`), and use predicate functions with `where()` 
+  (e.g. `where(is.character)`) to select variables by type (#4680). It also makes
   it possible to use `select()` and `rename()` to repair data frames with
   duplicated names (#4615) and prevents you from accidentally introducing
   duplicate names (#4643). This also means that dplyr now re-exports `any_of()`
@@ -348,11 +347,10 @@
 * `order_by()` gives an informative hint if you accidentally call it instead
   of `arrange()` #3357.
 
-* `tally()` and `count()` now error if the default output `name` (n), already
-  exists in the data frame. You'll now need to specify it yourself; this 
-  replaces the existing ad hoc approach which used `nn`, `nnn` etc.
-  If you supply an explicit `name`, it will override an existing column
-  with that name (#4284).
+* `tally()` and `count()` now message if the default output `name` (n), already
+  exists in the data frame. To quiet the message, you'll need to supply an 
+  explicit `name` (#4284). You can override the default weighting to using a
+  constant by setting `wt = 1`.
 
 * `starwars` dataset now does a better job of separating biological sex from
   gender identity. The previous `gender` column has been renamed to `sex`,
