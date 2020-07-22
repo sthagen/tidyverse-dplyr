@@ -101,7 +101,7 @@
 #' # to multiple columns in a tibble.
 #' starwars %>%
 #'  select(name, homeworld, species) %>%
-#'  mutate(across(-name, as.factor))
+#'  mutate(across(!name, as.factor))
 #' # see more in ?across
 #'
 #' # Window functions are useful for grouped mutates:
@@ -218,6 +218,7 @@ transmute.data.frame <- function(.data, ...) {
 
 mutate_cols <- function(.data, ...) {
   mask <- DataMask$new(.data, caller_env())
+  on.exit(mask$forget("mutate"), add = TRUE)
   rows <- mask$get_rows()
 
   dots <- enquos(...)
