@@ -1,6 +1,7 @@
 ## Release summary
 
-Minor release addressing issues of the 1.0.0 release, and findings from CRAN checks. 
+This is a minor release that adress new findings since the major release 1.0.0 and also 
+is forward compatible with the next version of vctrs. 
 
 ## Test environments
 
@@ -20,14 +21,15 @@ Newly failing R packages are listed below.
 
 ## revdepcheck results
 
-We checked 2089 reverse dependencies (2071 from CRAN + 18 from BioConductor), comparing R CMD check results across CRAN and dev versions of this package.
+We checked 2132 reverse dependencies (2111 from CRAN + 21 from BioConductor), comparing R CMD check results across CRAN and dev versions of this package.
 
- * We saw 1 new problem
- * We failed to check 119 packages
+ * We saw 2 new problems
+ * We failed to check 129 packages
 
 Issues with CRAN packages are summarised below.
 
 ### New problems
 (This reports the first line of each new failure)
 
-* unpivotr: pull request available https://github.com/nacnudus/unpivotr/issues/39
+* jstor: We could not reproduce locally
+* ralger: A pull request has been prepared https://github.com/feddelegrand7/ralger/pull/3
