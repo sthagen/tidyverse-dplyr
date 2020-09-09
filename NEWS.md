@@ -1,3 +1,10 @@
+# dplyr (development version)
+
+* Clarify that `between()` is not vectorised (#5493).
+
+* Fixed `across()` issue where data frame columns would could not be referred to
+  with `all_of()` in the nested case (`mutate()` within `mutate()`) (#5498).
+
 # dplyr 1.0.2
 
 * Fixed `across()` issue where data frame columns would mask objects referred to
@@ -1444,7 +1451,7 @@ All data table related code has been separated out in to a new dtplyr package. T
 
 ### Tibble
 
-Functions related to the creation and coercion of `tbl_df`s, now live in their own package: [tibble](http://blog.rstudio.org/2016/03/24/tibble-1-0-0/). See `vignette("tibble")` for more details.
+Functions related to the creation and coercion of `tbl_df`s, now live in their own package: [tibble](https://blog.rstudio.org/2016/03/24/tibble-1-0-0/). See `vignette("tibble")` for more details.
 
 * `$` and `[[` methods that never do partial matching (#1504), and throw
   an error if the variable does not exist.
