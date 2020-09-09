@@ -54,7 +54,7 @@
         <a class="navbar-brand" href="../index.html">dplyr</a>
         <div class="info hidden-xs hidden-sm">
           <span class="partof">part of the <a href="https://tidyverse.org">tidyverse</a></span>
-          <span class="version version-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">1.0.0.9000</span>
+          <span class="version version-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">1.0.2.9000</span>
         </div>
       </div>
     </div>
@@ -285,9 +285,9 @@
 <span class="co">#&gt; 4     4   112</span>
 <span class="co">#&gt; # … with 2 more rows</span>
 </pre></div>
-<p>Of course, if you have a lot of variables, it’s going to be tedious to type in every variable name. Instead, you can use <code><a href="../reference/across.html">c_across()</a></code> which uses tidy selection syntax so you can to succinctly select many variables:</p>
+<p>Of course, if you have a lot of variables, it’s going to be tedious to type in every variable name. Instead, you can use <code><a href="../reference/c_across.html">c_across()</a></code> which uses tidy selection syntax so you can to succinctly select many variables:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit">
-<span class="kw">rf</span> <span class="op">%&gt;%</span> <span class="fu"><a href="../reference/mutate.html">mutate</a></span>(total = <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="fu"><a href="../reference/across.html">c_across</a></span>(<span class="kw">w</span><span class="op">:</span><span class="kw">z</span>)))
+<span class="kw">rf</span> <span class="op">%&gt;%</span> <span class="fu"><a href="../reference/mutate.html">mutate</a></span>(total = <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="fu"><a href="../reference/c_across.html">c_across</a></span>(<span class="kw">w</span><span class="op">:</span><span class="kw">z</span>)))
 <span class="co">#&gt; # A tibble: 6 x 6</span>
 <span class="co">#&gt; # Rowwise:  id</span>
 <span class="co">#&gt;      id     w     x     y     z total</span>
@@ -297,7 +297,7 @@
 <span class="co">#&gt; 3     3    12    22    32    42   108</span>
 <span class="co">#&gt; 4     4    13    23    33    43   112</span>
 <span class="co">#&gt; # … with 2 more rows</span>
-<span class="kw">rf</span> <span class="op">%&gt;%</span> <span class="fu"><a href="../reference/mutate.html">mutate</a></span>(total = <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="fu"><a href="../reference/across.html">c_across</a></span>(<span class="fu">where</span>(<span class="kw">is.numeric</span>))))
+<span class="kw">rf</span> <span class="op">%&gt;%</span> <span class="fu"><a href="../reference/mutate.html">mutate</a></span>(total = <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="fu"><a href="../reference/c_across.html">c_across</a></span>(<span class="fu">where</span>(<span class="kw">is.numeric</span>))))
 <span class="co">#&gt; # A tibble: 6 x 6</span>
 <span class="co">#&gt; # Rowwise:  id</span>
 <span class="co">#&gt;      id     w     x     y     z total</span>
@@ -311,7 +311,7 @@
 <p>You could combine this with column-wise operations (see <code><a href="../articles/colwise.html">vignette("colwise")</a></code> for more details) to compute the proportion of the total for each column:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit">
 <span class="kw">rf</span> <span class="op">%&gt;%</span> 
-  <span class="fu"><a href="../reference/mutate.html">mutate</a></span>(total = <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="fu"><a href="../reference/across.html">c_across</a></span>(<span class="kw">w</span><span class="op">:</span><span class="kw">z</span>))) <span class="op">%&gt;%</span> 
+  <span class="fu"><a href="../reference/mutate.html">mutate</a></span>(total = <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="fu"><a href="../reference/c_across.html">c_across</a></span>(<span class="kw">w</span><span class="op">:</span><span class="kw">z</span>))) <span class="op">%&gt;%</span> 
   <span class="fu"><a href="../reference/group_by.html">ungroup</a></span>() <span class="op">%&gt;%</span> 
   <span class="fu"><a href="../reference/mutate.html">mutate</a></span>(<span class="fu"><a href="../reference/across.html">across</a></span>(<span class="kw">w</span><span class="op">:</span><span class="kw">z</span>, <span class="op">~</span> <span class="kw">.</span> <span class="op">/</span> <span class="kw">total</span>))
 <span class="co">#&gt; # A tibble: 6 x 6</span>
@@ -347,7 +347,7 @@
 <span class="co">#&gt; 4     4    13    23    33    43  23.2</span>
 <span class="co">#&gt; # … with 2 more rows</span>
 </pre></div>
-<p><strong>NB</strong>: I use <code>df</code> (not <code>rf</code>) and <code><a href="../reference/across.html">across()</a></code> (not <code><a href="../reference/across.html">c_across()</a></code>) here because <code><a href="https://rdrr.io/r/base/colSums.html">rowMeans()</a></code> and <code><a href="https://rdrr.io/r/base/colSums.html">rowSums()</a></code> take a multi-row data frame as input.</p>
+<p><strong>NB</strong>: I use <code>df</code> (not <code>rf</code>) and <code><a href="../reference/across.html">across()</a></code> (not <code><a href="../reference/c_across.html">c_across()</a></code>) here because <code><a href="https://rdrr.io/r/base/colSums.html">rowMeans()</a></code> and <code><a href="https://rdrr.io/r/base/colSums.html">rowSums()</a></code> take a multi-row data frame as input.</p>
 </div>
 </div>
 <div id="list-columns" class="section level2">
@@ -547,14 +547,14 @@
 <span class="co">#&gt; 3     8 0.423</span>
 <span class="kw">mods</span> <span class="op">%&gt;%</span> <span class="fu"><a href="../reference/summarise.html">summarise</a></span>(<span class="kw">broom</span>::<span class="fu"><a href="https://rdrr.io/pkg/generics/man/glance.html">glance</a></span>(<span class="kw">mod</span>))
 <span class="co">#&gt; `summarise()` regrouping output by 'cyl' (override with `.groups` argument)</span>
-<span class="co">#&gt; # A tibble: 3 x 12</span>
+<span class="co">#&gt; # A tibble: 3 x 13</span>
 <span class="co">#&gt; # Groups:   cyl [3]</span>
 <span class="co">#&gt;     cyl r.squared adj.r.squared sigma statistic p.value    df logLik   AIC   BIC</span>
-<span class="co">#&gt;   &lt;dbl&gt;     &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span>
-<span class="co">#&gt; 1     4     0.509         0.454  3.33      9.32  0.0137     2 -27.7   61.5  62.7</span>
-<span class="co">#&gt; 2     6     0.465         0.357  1.17      4.34  0.0918     2  -9.83  25.7  25.5</span>
-<span class="co">#&gt; 3     8     0.423         0.375  2.02      8.80  0.0118     2 -28.7   63.3  65.2</span>
-<span class="co">#&gt; # … with 2 more variables: deviance &lt;dbl&gt;, df.residual &lt;int&gt;</span>
+<span class="co">#&gt;   &lt;dbl&gt;     &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span>
+<span class="co">#&gt; 1     4     0.509         0.454  3.33      9.32  0.0137     1 -27.7   61.5  62.7</span>
+<span class="co">#&gt; 2     6     0.465         0.357  1.17      4.34  0.0918     1  -9.83  25.7  25.5</span>
+<span class="co">#&gt; 3     8     0.423         0.375  2.02      8.80  0.0118     1 -28.7   63.3  65.2</span>
+<span class="co">#&gt; # … with 3 more variables: deviance &lt;dbl&gt;, df.residual &lt;int&gt;, nobs &lt;int&gt;</span>
 </pre></div>
 <p>Or easily access the parameters of each model:</p>
 <div class="sourceCode" id="cb24"><pre class="downlit">
