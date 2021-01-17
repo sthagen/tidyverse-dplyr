@@ -1,5 +1,9 @@
 # dplyr (development version)
 
+# dplyr 1.0.3
+
+* `summarise()` no longer informs when the result is ungrouped (#5633).
+
 * `group_by(.drop = FALSE)` preserves ordered factors (@brianrice2, #5545).
 
 * `count()` and `tally()` are now generic. 
@@ -1481,7 +1485,7 @@ All data table related code has been separated out in to a new dtplyr package. T
 
 ### Tibble
 
-Functions related to the creation and coercion of `tbl_df`s, now live in their own package: [tibble](https://blog.rstudio.org/2016/03/24/tibble-1-0-0/). See `vignette("tibble")` for more details.
+Functions related to the creation and coercion of `tbl_df`s, now live in their own package: [tibble](https://blog.rstudio.com/2016/03/24/tibble-1-0-0/). See `vignette("tibble")` for more details.
 
 * `$` and `[[` methods that never do partial matching (#1504), and throw
   an error if the variable does not exist.

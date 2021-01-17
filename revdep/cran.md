@@ -1,9 +1,9 @@
 ## revdepcheck results
 
-We checked 2383 reverse dependencies (2338 from CRAN + 45 from BioConductor), comparing R CMD check results across CRAN and dev versions of this package.
+We checked 2426 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
 
  * We saw 7 new problems
- * We failed to check 25 packages
+ * We failed to check 54 packages
 
 Issues with CRAN packages are summarised below.
 
@@ -14,8 +14,8 @@ Issues with CRAN packages are summarised below.
   checking S3 generic/method consistency ... WARNING
   checking Rd \usage sections ... NOTE
 
-* IRISMustangMetrics
-  checking examples ... ERROR
+* gtfs2gps
+  checking tests ... ERROR
 
 * lplyr
   checking examples ... ERROR
@@ -23,41 +23,70 @@ Issues with CRAN packages are summarised below.
 * mosaicCore
   checking tests ... ERROR
 
-* plotly
-  checking examples ... ERROR
-  checking tests ... ERROR
-
 * tcR
   checking S3 generic/method consistency ... WARNING
   checking Rd \usage sections ... NOTE
+
+* TextMiningGUI
+  checking examples ... ERROR
+  checking whether package ‘TextMiningGUI’ can be installed ... WARNING
 
 * timetk
   checking examples ... ERROR
 
 ### Failed to check
 
-* BAwiR              (NA)
-* BiodiversityR      (NA)
-* butcher            (NA)
-* CausalImpact       (NA)
-* CB2                (NA)
-* cbar               (NA)
-* crossmap           (NA)
-* diceR              (NA)
-* DiversityOccupancy (NA)
-* ESTER              (NA)
-* florestal          (NA)
-* ggstatsplot        (NA)
-* jstor              (NA)
-* MarketMatching     (NA)
-* metagam            (NA)
-* mlr3db             (NA)
-* patternize         (NA)
-* precautionary      (NA)
-* processR           (NA)
-* psychonetrics      (NA)
-* raptr              (NA)
-* Rarefy             (NA)
-* statsExpressions   (NA)
-* trackr             (NA)
-* wrswoR             (NA)
+* accept            (NA)
+* adheRenceRX       (NA)
+* ADMMsigma         (NA)
+* afex              (NA)
+* AMPLE             (NA)
+* bayesdfa          (NA)
+* BCEA              (NA)
+* BSDA              (NA)
+* butcher           (NA)
+* CB2               (NA)
+* cbar              (NA)
+* CoordinateCleaner (NA)
+* crossmap          (NA)
+* diceR             (NA)
+* DTAT              (NA)
+* EML               (NA)
+* EpiNow2           (NA)
+* gastempt          (NA)
+* glmmfields        (NA)
+* GOxploreR         (NA)
+* ICAMS             (NA)
+* jstor             (NA)
+* MarketMatching    (NA)
+* MatchThem         (NA)
+* MetaboList        (NA)
+* metagam           (NA)
+* mlr3db            (NA)
+* multinma          (NA)
+* Neighboot         (NA)
+* NetworkInference  (NA)
+* pencal            (NA)
+* PML               (NA)
+* PortfolioAnalysis (NA)
+* RadialVisGadgets  (NA)
+* Rfssa             (NA)
+* RmarineHeatWaves  (NA)
+* rmdcev            (NA)
+* RSDA              (NA)
+* rstap             (NA)
+* RTL               (NA)
+* SAR               (NA)
+* SCORPIUS          (NA)
+* SDLfilter         (NA)
+* SEIRfansy         (NA)
+* ShinyQuickStarter (NA)
+* Signac            (NA)
+* SimBIID           (NA)
+* SpaDES.tools      (NA)
+* Superpower        (NA)
+* TCIU              (NA)
+* trackr            (NA)
+* TrafficBDE        (NA)
+* wrswoR            (NA)
+* WRTDStidal        (NA)
