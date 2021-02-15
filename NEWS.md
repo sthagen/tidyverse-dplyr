@@ -1,5 +1,14 @@
 # dplyr (development version)
 
+* Fixed edge case of `slice_sample()` when `weight_by=` is used and there 
+  0 rows (#5729). 
+  
+* `across()` can again use columns in functions defined inline (#5734). 
+
+* Using testthat 3rd edition. 
+
+* Fixed bug introduced in `across()` in previous version (#5765).
+
 # dplyr 1.0.4
 
 * Improved performance for `across()`. This makes `summarise(across())` and 
