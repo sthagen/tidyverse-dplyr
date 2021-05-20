@@ -528,15 +528,36 @@ test_that("can pass quosure through `across()`", {
 
 test_that("across() inlines formulas", {
   env <- env()
+  f <- ~ toupper(.x)
 
   expect_equal(
-    as_across_fn_call(~ toupper(.x), quote(foo), env),
-    new_quosure(quote(toupper(foo)), env)
+    as_across_fn_call(f, quote(foo), env),
+    new_quosure(quote(toupper(foo)), f_env(f))
   )
 
+  f <- ~ list(.x, ., .x)
   expect_equal(
-    as_across_fn_call(~ list(.x, ., .x), quote(foo), env),
-    new_quosure(quote(list(foo, foo, foo)), env)
+    as_across_fn_call(f, quote(foo), env),
+    new_quosure(quote(list(foo, foo, foo)), f_env(f))
+  )
+})
+
+test_that("across() uses local formula environment (#5881)", {
+  f <- local({
+    prefix <- "foo"
+    ~ paste(prefix, .x)
+  })
+  df <- tibble(x = "x")
+  expect_equal(
+    mutate(df, across(x, f)),
+    tibble(x = "foo x")
+  )
+})
+
+test_that("unevaluated formulas (currently) fail", {
+  df <- tibble(x = "x")
+  expect_error(
+    mutate(df, across(x, quote(~ paste("foo", .x))))
   )
 })
 
@@ -603,6 +624,70 @@ test_that("if_any() and if_all() wrapped deal with no inputs or single inputs", 
   )
 })
 
+test_that("across() can use named selections", {
+  df <- data.frame(x = 1, y = 2)
+
+  # no fns
+  expect_equal(
+    df %>% summarise(across(c(a = x, b = y))),
+    data.frame(a = 1, b = 2)
+  )
+  expect_equal(
+    df %>% summarise(across(all_of(c(a = "x", b = "y")))),
+    data.frame(a = 1, b = 2)
+  )
+
+  # no fns, non expanded
+  expect_equal(
+    df %>% summarise((across(c(a = x, b = y)))),
+    data.frame(a = 1, b = 2)
+  )
+  expect_equal(
+    df %>% summarise((across(all_of(c(a = "x", b = "y"))))),
+    data.frame(a = 1, b = 2)
+  )
+
+  # one fn
+  expect_equal(
+    df %>% summarise(across(c(a = x, b = y), mean)),
+    data.frame(a = 1, b = 2)
+  )
+  expect_equal(
+    df %>% summarise(across(all_of(c(a = "x", b = "y")), mean)),
+    data.frame(a = 1, b = 2)
+  )
+
+  # one fn - non expanded
+  expect_equal(
+    df %>% summarise((across(c(a = x, b = y), mean))),
+    data.frame(a = 1, b = 2)
+  )
+  expect_equal(
+    df %>% summarise((across(all_of(c(a = "x", b = "y")), mean))),
+    data.frame(a = 1, b = 2)
+  )
+
+  # multiple fns
+  expect_equal(
+    df %>% summarise(across(c(a = x, b = y), list(mean = mean, sum = sum))),
+    data.frame(a_mean = 1, a_sum = 1, b_mean = 2, b_sum = 2)
+  )
+  expect_equal(
+    df %>% summarise(across(all_of(c(a = "x", b = "y")), list(mean = mean, sum = sum))),
+    data.frame(a_mean = 1, a_sum = 1, b_mean = 2, b_sum = 2)
+  )
+
+  # multiple fns - non expanded
+  expect_equal(
+    df %>% summarise((across(c(a = x, b = y), list(mean = mean, sum = sum)))),
+    data.frame(a_mean = 1, a_sum = 1, b_mean = 2, b_sum = 2)
+  )
+  expect_equal(
+    df %>% summarise((across(all_of(c(a = "x", b = "y")), list(mean = mean, sum = sum)))),
+    data.frame(a_mean = 1, a_sum = 1, b_mean = 2, b_sum = 2)
+  )
+})
+
 
 # c_across ----------------------------------------------------------------
 
@@ -610,4 +695,11 @@ test_that("selects and combines columns", {
   df <- data.frame(x = 1:2, y = 3:4)
   out <- df %>% summarise(z = list(c_across(x:y)))
   expect_equal(out$z, list(1:4))
+})
+
+test_that("key_deparse() collapses (#5883)", {
+  expect_equal(
+    length(key_deparse(quo(all_of(c("aaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbb", "cccccccccccccc", "ddddddddddddddddddd"))))),
+    1
+  )
 })
