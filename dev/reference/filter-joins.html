@@ -319,23 +319,23 @@ individual methods for extra arguments and differences in behaviour.</p>
 <span class='r-msg co'><span class='r-pr'>#&gt;</span> Joining, by = "name"</span>
 <span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #949494;'># A tibble: 2 x 2</span></span>
 <span class='r-out co'><span class='r-pr'>#&gt;</span>   name  band   </span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span>   <span style='color: #949494;font-style: italic;'>&lt;chr&gt;</span><span> </span><span style='color: #949494;font-style: italic;'>&lt;chr&gt;</span><span>  </span></span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #BCBCBC;'>1</span><span> John  Beatles</span></span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #BCBCBC;'>2</span><span> Paul  Beatles</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span> <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>  </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #BCBCBC;'>1</span> John  Beatles</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #BCBCBC;'>2</span> Paul  Beatles</span>
 <span class='r-in'><span class='va'>band_members</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'>anti_join</span><span class='op'>(</span><span class='va'>band_instruments</span><span class='op'>)</span></span>
 <span class='r-msg co'><span class='r-pr'>#&gt;</span> Joining, by = "name"</span>
 <span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #949494;'># A tibble: 1 x 2</span></span>
 <span class='r-out co'><span class='r-pr'>#&gt;</span>   name  band  </span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span>   <span style='color: #949494;font-style: italic;'>&lt;chr&gt;</span><span> </span><span style='color: #949494;font-style: italic;'>&lt;chr&gt;</span><span> </span></span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #BCBCBC;'>1</span><span> Mick  Stones</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span> <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #BCBCBC;'>1</span> Mick  Stones</span>
 <span class='r-in'></span>
 <span class='r-in'><span class='co'># To suppress the message about joining variables, supply `by`</span></span>
 <span class='r-in'><span class='va'>band_members</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'>semi_join</span><span class='op'>(</span><span class='va'>band_instruments</span>, by <span class='op'>=</span> <span class='st'>"name"</span><span class='op'>)</span></span>
 <span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #949494;'># A tibble: 2 x 2</span></span>
 <span class='r-out co'><span class='r-pr'>#&gt;</span>   name  band   </span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span>   <span style='color: #949494;font-style: italic;'>&lt;chr&gt;</span><span> </span><span style='color: #949494;font-style: italic;'>&lt;chr&gt;</span><span>  </span></span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #BCBCBC;'>1</span><span> John  Beatles</span></span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #BCBCBC;'>2</span><span> Paul  Beatles</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span> <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>  </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #BCBCBC;'>1</span> John  Beatles</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #BCBCBC;'>2</span> Paul  Beatles</span>
 <span class='r-in'><span class='co'># This is good practice in production code</span></span>
 </code></pre></div>
   </div>
