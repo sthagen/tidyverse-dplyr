@@ -556,7 +556,7 @@ expand_across <- function(quo) {
     var <- vars[[i]]
 
     for (j in seq_fns) {
-      fn_call <- as_across_fn_call(fns[[j]], var, env)
+      fn_call <- as_across_fn_call(fns[[j]], var, env, mask)
 
       name <- names[[k]]
       expressions[[k]] <- new_dplyr_quosure(
@@ -582,15 +582,40 @@ expand_across <- function(quo) {
 # performance implications for lists of lambdas where formulas will
 # have better performance. It is possible that we will be able to
 # inline evaluated functions with strictness annotations.
-as_across_fn_call <- function(fn, var, env) {
-  if (is_formula(fn, lhs = FALSE)) {
+as_across_fn_call <- function(fn, var, env, mask) {
+  if (is_inlinable_formula(fn, mask)) {
     # Don't need to worry about arguments passed through `...`
     # because we cancel expansion in that case
-    fn <- expr_substitute(fn, quote(.), sym(var))
-    fn <- expr_substitute(fn, quote(.x), sym(var))
-    new_quosure(f_rhs(fn), f_env(fn))
+    expr <- f_rhs(fn)
+    expr <- expr_substitute(expr, quote(.), sym(var))
+    expr <- expr_substitute(expr, quote(.x), sym(var))
+
+    # If the formula environment is the data mask it means the formula
+    # was unevaluated, and in that case we can use the original
+    # quosure environment. Otherwise, use the formula environment
+    # which might include local data that is not reachable from the
+    # data mask.
+    f_env <- f_env(fn)
+    if (identical(f_env, mask)) {
+      f_env <- env
+    }
+
+    new_quosure(expr, f_env)
   } else {
     fn_call <- call2(as_function(fn), sym(var))
     new_quosure(fn_call, env)
+  }
+}
+
+# Don't inline formulas that don't inherit directly from the mask
+# because of a tidyeval bug/limitation that causes an infinite loop.
+# If the formula env is the data mask, we replace it with the original
+# quosure environment (which is maskable) later on to work around that
+# bug.
+is_inlinable_formula <- function(x, mask) {
+  if (is_formula(x, lhs = FALSE, scoped = TRUE)) {
+    identical(x, mask) || !env_inherits(f_env(x), mask)
+  } else {
+    FALSE
   }
 }

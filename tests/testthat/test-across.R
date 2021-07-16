@@ -531,13 +531,13 @@ test_that("across() inlines formulas", {
   f <- ~ toupper(.x)
 
   expect_equal(
-    as_across_fn_call(f, quote(foo), env),
+    as_across_fn_call(f, quote(foo), env, env),
     new_quosure(quote(toupper(foo)), f_env(f))
   )
 
   f <- ~ list(.x, ., .x)
   expect_equal(
-    as_across_fn_call(f, quote(foo), env),
+    as_across_fn_call(f, quote(foo), env, env),
     new_quosure(quote(list(foo, foo, foo)), f_env(f))
   )
 })
@@ -551,6 +551,37 @@ test_that("across() uses local formula environment (#5881)", {
   expect_equal(
     mutate(df, across(x, f)),
     tibble(x = "foo x")
+  )
+  expect_equal(
+    mutate(df, across(x, list(f = f))),
+    tibble(x = "x", x_f = "foo x")
+  )
+
+  local({
+    # local() here is not necessary, it's just in case the
+    # code is run directly without the test_that()
+    prefix <- "foo"
+    expect_equal(
+      mutate(df, across(x, ~paste(prefix, .x))),
+      tibble(x = "foo x")
+    )
+    expect_equal(
+      mutate(df, across(x, list(f = ~paste(prefix, .x)))),
+      tibble(x = "x", x_f = "foo x")
+    )
+  })
+
+  expect_equal(
+    data.frame(x = 1) %>% mutate(across(1, list(f = local(~ . + 1)))),
+    data.frame(x = 1, x_f = 2)
+  )
+
+  expect_equal(
+    data.frame(x = 1) %>% mutate(across(1, local({
+      `_local_var` <- 1
+      ~ . + `_local_var`
+    }))),
+    data.frame(x = 2)
   )
 })
 
@@ -624,6 +655,16 @@ test_that("if_any() and if_all() wrapped deal with no inputs or single inputs", 
   )
 })
 
+test_that("expanded if_any() finds local data", {
+  limit <- 7
+  df <- data.frame(x = 1:10, y = 10:1)
+
+  expect_identical(
+    filter(df, if_any(everything(), ~ .x > limit)),
+    filter(df, x > limit | y > limit)
+  )
+})
+
 test_that("across() can use named selections", {
   df <- data.frame(x = 1, y = 2)
 
@@ -688,6 +729,28 @@ test_that("across() can use named selections", {
   )
 })
 
+test_that("expr_subtitute() stops at lambdas (#5896)", {
+  expect_identical(
+    expr_substitute(expr(map(.x, ~mean(.x))), quote(.x), quote(a)),
+    expr(map(a, ~mean(.x)))
+  )
+  expect_identical(
+    expr_substitute(expr(map(.x, function(.x) mean(.x))), quote(.x), quote(a)),
+    expr(map(a, function(.x) mean(.x)))
+  )
+})
+
+test_that("expr_subtitute() keeps at double-sided formula (#5894)", {
+  expect_identical(
+    expr_substitute(expr(case_when(.x < 5 ~ 5, TRUE ~ .x)), quote(.x), quote(a)),
+    expr(case_when(a < 5 ~ 5, TRUE ~ a))
+  )
+
+  expect_identical(
+    expr_substitute(expr(case_when(. < 5 ~ 5, TRUE ~ .)), quote(.), quote(a)),
+    expr(case_when(a < 5 ~ 5, TRUE ~ a))
+  )
+})
 
 # c_across ----------------------------------------------------------------
 
