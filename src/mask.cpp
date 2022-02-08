@@ -73,22 +73,6 @@ SEXP dplyr_mask_add(SEXP env_private, SEXP s_name, SEXP ptype, SEXP chunks) {
   return R_NilValue;
 }
 
-//  no C-api for rm() so callback to R :shrug:
-SEXP get_rm_call() {
-  SEXP rm_call = PROTECT(Rf_lang3(dplyr::symbols::rm, R_NilValue, R_NilValue));
-  SET_TAG(CDDR(rm_call), dplyr::symbols::envir);
-  R_PreserveObject(rm_call);
-  UNPROTECT(1);
-  return rm_call;
-}
-
-void rm(SEXP name, SEXP env) {
-  static SEXP rm_call = get_rm_call();
-  SETCADR(rm_call, name);
-  SETCADDR(rm_call, env);
-  Rf_eval(rm_call, R_BaseEnv);
-}
-
 SEXP dplyr_mask_remove(SEXP env_private, SEXP s_name) {
   SEXP name = STRING_ELT(s_name, 0);
 
@@ -112,12 +96,13 @@ SEXP dplyr_mask_remove(SEXP env_private, SEXP s_name) {
     Rf_namesgets(new_current_data, new_current_vars);
     Rf_defineVar(dplyr::symbols::current_data, new_current_data, env_private);
 
-    SEXP chops = PROTECT(Rf_findVarInFrame(env_private, dplyr::symbols::chops));
     SEXP sym_name = PROTECT(rlang::str_as_symbol(name));
-    rm(sym_name, chops);
 
+    SEXP chops = PROTECT(Rf_findVarInFrame(env_private, dplyr::symbols::chops));
     SEXP mask = PROTECT(Rf_findVarInFrame(env_private, dplyr::symbols::mask));
-    rm(sym_name, ENCLOS(mask));
+
+    rlang::env_unbind(ENCLOS(mask), sym_name);
+    rlang::env_unbind(chops, sym_name);
 
     UNPROTECT(5);
   }
