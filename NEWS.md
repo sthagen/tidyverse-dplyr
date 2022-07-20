@@ -1,5 +1,31 @@
 # dplyr (development version)
 
+* `na_if()` has been rewritten to utilize vctrs. This comes with the following
+  improvements (#6329):
+
+  * It now casts `y` to the type of `x` before comparing them, which makes it
+    clearer that this function is type and size stable on `x`. In particular,
+    this means that you can no longer do `na_if(<tibble>, 0)`, which previously
+    accidentally allowed you to replace any instance of `0` across every column
+    of the tibble with `NA`. `na_if()` was never intended to work this way, and
+    this is considered off-label usage.
+    
+  * You can now replace `NaN` values in `x` with `NA` through `na_if(x, NaN)`.
+
+* `first()`, `last()`, and `nth()` have been rewritten to use vctrs. This comes
+  with the following improvements (#6331):
+  
+  * When used on a data frame, these functions now return a single row rather
+    than a single column. This is more consistent with the vctrs principle that
+    a data frame is generally treated as a vector of rows.
+    
+  * The `default` is no longer "guessed", and will always automatically be set
+    to a missing value appropriate for the type of `x`.
+    
+  * Fractional values of `n` are no longer truncated to integers, and will now
+    cause an error. For example, `nth(x, n = 2)` is fine, but
+    `nth(x, n = 2.5)` is now an error.
+
 * `lag()` and `lead()` now cast `default` to the type of `x`, rather than taking
   the common type. This ensures that these functions are type stable on `x`
   (#6330).
