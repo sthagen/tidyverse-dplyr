@@ -106,31 +106,35 @@ the size of <code>x</code> and are cast to the type of <code>x</code>.</p></dd>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1e2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">x</span><span class="op">[</span><span class="fu">between</span><span class="op">(</span><span class="va">x</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1]  0.746333652  0.730842941 -0.693793531 -0.566611867 -0.230136987</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [6] -0.451246658  0.283662619 -0.822887577  0.083008708 -0.239168280</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [11] -0.259191215 -0.150953950 -0.294124787 -0.033632583  0.279940841</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [16] -0.499818997  0.414140508 -0.012992670  0.691505035  0.080028626</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [21]  0.073405063  0.272333261 -0.898862072 -0.064960039 -0.912202524</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [26] -0.597786282  0.033696002 -0.574648115 -0.779343517 -0.378105472</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [31]  0.478190653  0.334968366 -0.098668267  0.713590202  0.006366888</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [36] -0.992736597  0.895554659 -0.005697223  0.341822497  0.429246668</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [41] -0.263678111 -0.553923954  0.656573834 -0.135493127  0.271953332</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [46]  0.391394299 -0.416747227 -0.412259783  0.385699369 -0.434531800</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [51] -0.827856975  0.840762334 -0.940806355 -0.071596725 -0.813333231</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [56]  0.091302526  0.660485539 -0.410805785 -0.844333516</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1]  0.194241377 -0.714930686  0.032941928 -0.221063659  0.035946032</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [6] -0.517496580 -0.711376101 -0.383975354 -0.237450973 -0.242978791</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [11] -0.150740888  0.870500700 -0.506419745  0.933469092  0.092630283</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [16] -0.681590076  0.296277014  0.246103414  0.017042189  0.507397206</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [21]  0.481611682  0.375489930  0.482998316 -0.016176067  0.549063389</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [26]  0.642811688  0.278531257 -0.429554404 -0.728133685 -0.008043115</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [31] -0.327374562  0.155852139  0.380412650  0.835548546 -0.028833130</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [36] -0.362893117 -0.094215632 -0.791444502  0.321450991 -0.096532470</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [41]  0.410967624  0.395203453  0.875563976  0.656383300  0.307615487</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [46] -0.518305747 -0.803455751  0.020212233  0.995110041 -0.309031992</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [51] -0.097668925 -0.243217795  0.542932170  0.429128016 -0.540687149</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [56] -0.059523141  0.265749136 -0.656024796 -0.813552641  0.917451551</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [61] -0.302739565  0.765659982  0.464690518  0.129552034  0.114109848</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [66] -0.100692846 -0.650422254</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># On a tibble using `filter()`</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="filter.html">filter</a></span><span class="op">(</span><span class="va">starwars</span>, <span class="fu">between</span><span class="op">(</span><span class="va">height</span>, <span class="fl">100</span>, <span class="fl">150</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 5 × 14</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   name       height  mass hair_color skin_color eye_color birth_year sex  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Leia Orga…    150    49 brown      light      brown             19 fema…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Mon Mothma    150    <span style="color: #BB0000;">NA</span> auburn     fair       blue              48 fema…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Watto         137    <span style="color: #BB0000;">NA</span> black      blue, grey yellow            <span style="color: #BB0000;">NA</span> male </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Sebulba       112    40 none       grey, red  orange            <span style="color: #BB0000;">NA</span> male </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Gasgano       122    <span style="color: #BB0000;">NA</span> none       white, bl… black             <span style="color: #BB0000;">NA</span> male </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 6 more variables: gender &lt;chr&gt;, homeworld &lt;chr&gt;, species &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   name   height  mass hair_…¹ skin_…² eye_c…³ birth…⁴ sex   gender homew…⁵</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Leia …    150    49 brown   light   brown        19 fema… femin… Aldera…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Mon M…    150    <span style="color: #BB0000;">NA</span> auburn  fair    blue         48 fema… femin… Chandr…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Watto     137    <span style="color: #BB0000;">NA</span> black   blue, … yellow       <span style="color: #BB0000;">NA</span> male  mascu… Toydar…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Sebul…    112    40 none    grey, … orange       <span style="color: #BB0000;">NA</span> male  mascu… Malast…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Gasga…    122    <span style="color: #BB0000;">NA</span> none    white,… black        <span style="color: #BB0000;">NA</span> male  mascu… Troiken</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 4 more variables: species &lt;chr&gt;, films &lt;list&gt;, vehicles &lt;list&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   starships &lt;list&gt;, and abbreviated variable names ¹​hair_color,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   ²​skin_color, ³​eye_color, ⁴​birth_year, ⁵​homeworld</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ Use `colnames()` to see all variable names</span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
