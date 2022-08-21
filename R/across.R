@@ -137,11 +137,14 @@
 #' @export
 #' @seealso [c_across()] for a function that returns a vector
 across <- function(.cols = everything(), .fns = NULL, ..., .names = NULL) {
+  mask <- peek_mask()
+
   setup <- across_setup(
     {{ .cols }},
     fns = .fns,
     names = .names,
     .caller_env = caller_env(),
+    mask = mask,
     inline = FALSE
   )
 
@@ -168,8 +171,6 @@ across <- function(.cols = everything(), .fns = NULL, ..., .names = NULL) {
   }
   fns <- setup$fns
   names <- setup$names
-
-  mask <- peek_mask()
 
   if (is.null(fns)) {
     data <- mask$pick(vars)
@@ -278,9 +279,10 @@ if_across <- function(op, df) {
 #'  )
 c_across <- function(cols = everything()) {
   cols <- enquo(cols)
-  vars <- c_across_setup(!!cols)
 
-  mask <- peek_mask("c_across")
+  mask <- peek_mask()
+  vars <- c_across_setup(!!cols, mask = mask)
+
 
   cols <- mask$current_cols(vars)
   vec_c(!!!cols, .name_spec = zap())
@@ -299,7 +301,7 @@ across_setup <- function(cols,
                          fns,
                          names,
                          .caller_env,
-                         mask = peek_mask("across"),
+                         mask,
                          inline = FALSE) {
   cols <- enquo(cols)
 
@@ -322,9 +324,10 @@ across_setup <- function(cols,
   }
   across_cols <- mask$across_cols()
 
-  vars <- fix_call(
-    tidyselect::eval_select(cols, data = across_cols),
-    call = call(across_if_fn)
+  vars <- tidyselect::eval_select(
+    cols,
+    data = across_cols,
+    error_call = call(across_if_fn)
   )
   names_vars <- names(vars)
   vars <- names(across_cols)[vars]
@@ -332,8 +335,9 @@ across_setup <- function(cols,
   if (is.null(fns)) {
     if (!is.null(names)) {
       glue_mask <- across_glue_mask(.caller_env, .col = names_vars, .fn = "1")
-      names <- fix_call(
-        vec_as_names(glue(names, .envir = glue_mask), repair = "check_unique"),
+      names <- vec_as_names(
+        glue(names, .envir = glue_mask),
+        repair = "check_unique",
         call = call(across_if_fn)
       )
     } else {
@@ -372,8 +376,9 @@ across_setup <- function(cols,
     .col = rep(names_vars, each = length(fns)),
     .fn  = rep(names_fns , length(vars))
   )
-  names <- fix_call(
-    vec_as_names(glue(names, .envir = glue_mask), repair = "check_unique"),
+  names <- vec_as_names(
+    glue(names, .envir = glue_mask),
+    repair = "check_unique",
     call = call(across_if_fn)
   )
 
@@ -396,9 +401,7 @@ data_mask_top <- function(env, recursive = FALSE, inherit = FALSE) {
   env
 }
 
-c_across_setup <- function(cols) {
-  mask <- peek_mask("c_across")
-
+c_across_setup <- function(cols, mask) {
   cols <- enquo(cols)
   across_cols <- mask$across_cols()
 
@@ -545,6 +548,7 @@ expand_across <- function(quo) {
     fns = eval_tidy(expr$.fns, mask, env = env),
     names = eval_tidy(expr$.names, mask, env = env),
     .caller_env = dplyr_mask$get_caller_env(),
+    mask = dplyr_mask,
     inline = TRUE
   )
 
