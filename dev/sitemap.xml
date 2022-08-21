@@ -85,16 +85,19 @@
     <loc>https://dplyr.tidyverse.org/dev/reference/band_members.html</loc>
   </url>
   <url>
-    <loc>https://dplyr.tidyverse.org/dev/reference/bench_compare.html</loc>
-  </url>
-  <url>
     <loc>https://dplyr.tidyverse.org/dev/reference/between.html</loc>
   </url>
   <url>
-    <loc>https://dplyr.tidyverse.org/dev/reference/bind.html</loc>
+    <loc>https://dplyr.tidyverse.org/dev/reference/bind_cols.html</loc>
+  </url>
+  <url>
+    <loc>https://dplyr.tidyverse.org/dev/reference/bind_rows.html</loc>
   </url>
   <url>
     <loc>https://dplyr.tidyverse.org/dev/reference/c_across.html</loc>
+  </url>
+  <url>
+    <loc>https://dplyr.tidyverse.org/dev/reference/case_match.html</loc>
   </url>
   <url>
     <loc>https://dplyr.tidyverse.org/dev/reference/case_when.html</loc>
@@ -148,6 +151,9 @@
     <loc>https://dplyr.tidyverse.org/dev/reference/do.html</loc>
   </url>
   <url>
+    <loc>https://dplyr.tidyverse.org/dev/reference/dplyr-locale.html</loc>
+  </url>
+  <url>
     <loc>https://dplyr.tidyverse.org/dev/reference/dplyr-package.html</loc>
   </url>
   <url>
@@ -155,9 +161,6 @@
   </url>
   <url>
     <loc>https://dplyr.tidyverse.org/dev/reference/dplyr_extending.html</loc>
-  </url>
-  <url>
-    <loc>https://dplyr.tidyverse.org/dev/reference/dplyr_locale.html</loc>
   </url>
   <url>
     <loc>https://dplyr.tidyverse.org/dev/reference/dplyr_tidy_select.html</loc>
@@ -173,9 +176,6 @@
   </url>
   <url>
     <loc>https://dplyr.tidyverse.org/dev/reference/filter_all.html</loc>
-  </url>
-  <url>
-    <loc>https://dplyr.tidyverse.org/dev/reference/funs.html</loc>
   </url>
   <url>
     <loc>https://dplyr.tidyverse.org/dev/reference/glimpse.html</loc>
@@ -227,9 +227,6 @@
   </url>
   <url>
     <loc>https://dplyr.tidyverse.org/dev/reference/lead-lag.html</loc>
-  </url>
-  <url>
-    <loc>https://dplyr.tidyverse.org/dev/reference/location.html</loc>
   </url>
   <url>
     <loc>https://dplyr.tidyverse.org/dev/reference/make_tbl.html</loc>
@@ -317,9 +314,6 @@
   </url>
   <url>
     <loc>https://dplyr.tidyverse.org/dev/reference/select_all.html</loc>
-  </url>
-  <url>
-    <loc>https://dplyr.tidyverse.org/dev/reference/select_vars.html</loc>
   </url>
   <url>
     <loc>https://dplyr.tidyverse.org/dev/reference/setops.html</loc>
