@@ -1,5 +1,23 @@
 # dplyr (development version)
 
+* `row_number()`, `min_rank()`, `dense_rank()`, `ntile()`, `cume_dist()`, and
+  `percent_rank()` are now powered by vctrs, meaning that they are faster and
+  work for more types. You can now also rank by multiple columns at once by
+  supplying a data frame to these functions (#6428).
+  
+* `ntile()` now requires `n` to be a single positive integer.
+
+* `transmute()` is superseded in favour of `mutate(.keep = "none")`
+
+* `recode()` is superseded in favor of `case_match()`. `recode_factor()` is
+  superseded as well, but we don't have a direct replacement for it yet. We plan
+  to add one to forcats, but in the meantime you can often use a pattern of
+  `case_match(.ptype = factor(levels = ))` instead (#6433).
+
+* `across()` has gained a new experimental `.unpack` argument to optionally
+  unpack (as in, `tidyr::unpack()`) data frames returned by functions in `.fns`
+  (#6360).
+
 * `cur_group()` now works correctly with zero row grouped data frames (#6304).
 
 * Error messages in `group_by()`, `distinct()`, `tally()`, and `count()` are now
@@ -311,6 +329,10 @@
     `"error"` if dropped rows would be surprising.
 
 * `nest_join()` has gained the `na_matches` argument that all other joins have.
+
+# dplyr 1.0.10
+
+Hot patch release to resolve R CMD check failures.
 
 # dplyr 1.0.9
 

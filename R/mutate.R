@@ -1,9 +1,8 @@
 #' Create, modify, and delete columns
 #'
-#' `mutate()` adds new variables and preserves existing ones;
-#' `transmute()` adds new variables and drops existing ones.
-#' New variables overwrite existing variables of the same name.
-#' Variables can be removed by setting their value to `NULL`.
+#' `mutate()` creates new columns that are functions of existing variables.
+#' It can also modify (if the name is the same as an existing
+#' column) and delete columns (by setting their value to `NULL`).
 #'
 #' @section Useful mutate functions:
 #'
@@ -62,29 +61,22 @@
 #' An object of the same type as `.data`. The output has the following
 #' properties:
 #'
-#' * For `mutate()`:
-#'   * Columns from `.data` will be preserved according to the `.keep` argument.
-#'   * Existing columns that are modified by `...` will always be returned in
-#'     their original location.
-#'   * New columns created through `...` will be placed according to the
-#'     `.before` and `.after` arguments.
-#' * For `transmute()`:
-#'   * Columns created or modified through `...` will be returned in the order
-#'     specified by `...`.
-#'   * Unmodified grouping columns will be placed at the front.
+#' * Columns from `.data` will be preserved according to the `.keep` argument.
+#' * Existing columns that are modified by `...` will always be returned in
+#'   their original location.
+#' * New columns created through `...` will be placed according to the
+#'   `.before` and `.after` arguments.
 #' * The number of rows is not affected.
 #' * Columns given the value `NULL` will be removed.
 #' * Groups will be recomputed if a grouping variable is mutated.
 #' * Data frame attributes are preserved.
 #' @section Methods:
-#' These function are **generic**s, which means that packages can provide
+#' This function is a **generic**, which means that packages can provide
 #' implementations (methods) for other classes. See the documentation of
 #' individual methods for extra arguments and differences in behaviour.
 #'
 #' Methods available in currently loaded packages:
-#'
-#' * `mutate()`: \Sexpr[stage=render,results=rd]{dplyr:::methods_rd("mutate")}.
-#' * `transmute()`: \Sexpr[stage=render,results=rd]{dplyr:::methods_rd("transmute")}.
+#' \Sexpr[stage=render,results=rd]{dplyr:::methods_rd("mutate")}.
 #' @examples
 #' # Newly created variables are available immediately
 #' starwars %>%
@@ -128,7 +120,7 @@
 #' df %>% mutate(z = x + y, .keep = "all") # the default
 #' df %>% mutate(z = x + y, .keep = "used")
 #' df %>% mutate(z = x + y, .keep = "unused")
-#' df %>% mutate(z = x + y, .keep = "none") # same as transmute()
+#' df %>% mutate(z = x + y, .keep = "none")
 #'
 #' # Grouping ----------------------------------------
 #' # The mutate operation may yield different results on grouped
@@ -224,55 +216,12 @@ mutate.data.frame <- function(.data,
   dplyr_col_select(out, cols_retain)
 }
 
-#' @rdname mutate
-#' @export
-transmute <- function(.data, ...) {
-  UseMethod("transmute")
-}
-
-#' @export
-transmute.data.frame <- function(.data, ...) {
-  dots <- check_transmute_args(...)
-  dots <- dplyr_quosures(!!!dots)
-
-  cols <- mutate_cols(.data, dots, caller_env = caller_env())
-
-  out <- dplyr_col_modify(.data, cols)
-
-  # Compact out `NULL` columns that got removed.
-  # These won't exist in `out`, but we don't want them to look "new".
-  # Note that `dplyr_col_modify()` makes it impossible to `NULL` a group column,
-  # which we rely on below.
-  cols <- compact_null(cols)
-
-  # Retain expression columns in order of their appearance
-  cols_expr <- names(cols)
-
-  # Retain untouched group variables up front
-  cols_group <- group_vars(.data)
-  cols_group <- setdiff(cols_group, cols_expr)
-
-  cols_retain <- c(cols_group, cols_expr)
-
-  dplyr_col_select(out, cols_retain)
-}
-
 # Helpers -----------------------------------------------------------------
 
-check_transmute_args <- function(..., .keep, .before, .after, error_call = caller_env()) {
-  if (!missing(.keep)) {
-    abort("The `.keep` argument is not supported.", call = error_call)
-  }
-  if (!missing(.before)) {
-    abort("The `.before` argument is not supported.", call = error_call)
-  }
-  if (!missing(.after)) {
-    abort("The `.after` argument is not supported.", call = error_call)
-  }
-  enquos(...)
-}
-
 mutate_cols <- function(.data, dots, caller_env, error_call = caller_env()) {
+  # Collect dots before setting up error handlers (#6178)
+  force(dots)
+
   error_call <- dplyr_error_call(error_call)
 
   mask <- DataMask$new(.data, caller_env, "mutate", error_call = error_call)
@@ -281,199 +230,204 @@ mutate_cols <- function(.data, dots, caller_env, error_call = caller_env()) {
   on.exit(context_poke("column", old_current_column), add = TRUE)
   on.exit(mask$forget(), add = TRUE)
 
-  rows <- mask$get_rows()
-
   new_columns <- set_names(list(), character())
 
-  withCallingHandlers({
+  withCallingHandlers(
     for (i in seq_along(dots)) {
       context_poke("column", old_current_column)
+      new_columns <- mutate_col(dots[[i]], .data, mask, new_columns)
+    },
+    error = function(e) {
+      local_error_context(dots = dots, .index = i, mask = mask)
 
-      # get results from all the quosures that are expanded from ..i
-      # then ingest them after
-      quosures <- expand_across(dots[[i]])
-      quosures_results <- vector(mode = "list", length = length(quosures))
+      bullets <- c(
+        cnd_bullet_header("computing"),
+        mutate_bullets(e)
+      )
 
-      for (k in seq_along(quosures)) {
-        quo <- quosures[[k]]
-        quo_data <- attr(quo, "dplyr:::data")
-        if (!is.null(quo_data$column)) {
-          context_poke("column", quo_data$column)
-        }
-        # a list in which each element is the result of
-        # evaluating the quosure in the "sliced data mask"
-        # recycling it appropriately to match the group size
-        #
-        # TODO: reinject hybrid evaluation at the R level
-        chunks <- NULL
-
-        # result after unchopping the chunks
-        result <- NULL
-
-        if (quo_is_symbol(quo)){
-          name <- as_string(quo_get_expr(quo))
-
-          if (name %in% names(new_columns)) {
-            # already have result and chunks
-            result <- new_columns[[name]]
-            chunks <- mask$resolve(name)
-          } else if (name %in% names(.data)) {
-            # column from the original data
-            result <- .data[[name]]
-            chunks <- mask$resolve(name)
-          }
-
-          if (inherits(.data, "rowwise_df") && vec_is_list(result)) {
-            sizes <- list_sizes(result)
-            wrong <- which(sizes != 1)
-            if (length(wrong)) {
-              # same error as would have been generated by mask$eval_all_mutate()
-              group <- wrong[1L]
-              mask$set_current_group(group)
-
-              abort(
-                class = c("dplyr:::mutate_incompatible_size", "dplyr:::internal_error"),
-                dplyr_error_data = list(result_size = sizes[group], expected_size = 1)
-              )
-            }
-            result_ptype <- attr(result, "ptype", exact = TRUE)
-            if (length(result) == 0 && is.null(result_ptype)) {
-              # i.e. `vec_ptype_finalise(unspecified())` (#6369)
-              result <- logical()
-            } else {
-              result <- vec_unchop(result, ptype = result_ptype)
-            }
-          }
-        } else if (!quo_is_symbolic(quo) && !is.null(quo_get_expr(quo))) {
-          # constant, we still need both `result` and `chunks`
-          result <- quo_get_expr(quo)
-
-          result <- withCallingHandlers(
-            vec_recycle(result, vec_size(.data)),
-            error = function(cnd) {
-              abort(
-                class = c("dplyr:::mutate_constant_recycle_error", "dplyr:::internal_error"),
-                constant_size = vec_size(result), data_size = vec_size(.data)
-              )
-            }
-          )
-
-          chunks <- vec_chop(result, rows)
-        }
-
-        if (is.null(chunks)) {
-          if (is.null(quo_data$column)) {
-            chunks <- mask$eval_all_mutate(quo)
-          } else {
-            chunks <- withCallingHandlers(
-              mask$eval_all_mutate(quo),
-              error = function(cnd) {
-                msg <- glue("Problem while computing column `{quo_data$name_auto}`.")
-                abort(msg, call = call("across"), parent = cnd)
-              }
-            )
-          }
-        }
-
-        if (is.null(chunks)) {
-          next
-        }
-
-        # only unchop if needed
-        if (is.null(result)) {
-          if (length(rows) == 1) {
-            result <- chunks[[1]]
-          } else {
-            chunks <- dplyr_vec_cast_common(chunks, quo_data$name_auto)
-            result <- vec_unchop(chunks, rows)
-          }
-        }
-
-        quosures_results[[k]] <- list(result = result, chunks = chunks)
+      abort(
+        bullets,
+        class = "dplyr:::mutate_error",
+        parent = skip_internal_condition(e),
+        bullets = bullets,
+        call = error_call
+      )
+    },
+    warning = function(w) {
+      # Check if there is an upstack calling handler that would muffle
+      # the warning. This avoids doing the expensive work below for a
+      # silenced warning (#5675).
+      if (check_muffled_warning(w)) {
+        maybe_restart("muffleWarning")
       }
 
+      local_error_context(dots = dots, .index = i, mask = mask)
 
-      for (k in seq_along(quosures)) {
-        quo <- quosures[[k]]
-        quo_data <- attr(quo, "dplyr:::data")
+      warn(c(
+        cnd_bullet_header("computing"),
+        i = cnd_header(w),
+        i = cnd_bullet_cur_group_label(what = "warning")
+      ))
 
-        quo_result <- quosures_results[[k]]
-        if (is.null(quo_result)) {
-          if (quo_data$is_named) {
-            name <- quo_data$name_given
-            new_columns[[name]] <- zap()
-            mask$remove(name)
-          }
-          next
-        }
-
-        result <- quo_result$result
-        chunks <- quo_result$chunks
-
-        if (!quo_data$is_named && is.data.frame(result)) {
-          types <- vec_ptype(result)
-          types_names <- names(types)
-          chunks_extracted <- .Call(dplyr_extract_chunks, chunks, types)
-
-          for (j in seq_along(types)) {
-            mask$add_one(types_names[j], chunks_extracted[[j]], result = result[[j]])
-          }
-
-          new_columns[types_names] <- result
-        } else {
-          # treat as a single output otherwise
-          name <- quo_data$name_auto
-          mask$add_one(name = name, chunks = chunks, result = result)
-
-          new_columns[[name]] <- result
-        }
-
-      }
-
-    }
-
-  },
-  error = function(e) {
-    local_error_context(dots = dots, .index = i, mask = mask)
-
-    bullets <- c(
-      cnd_bullet_header("computing"),
-      mutate_bullets(e)
-    )
-
-    abort(
-      bullets,
-      class = "dplyr:::mutate_error",
-      parent = skip_internal_condition(e),
-      bullets = bullets,
-      call = error_call
-    )
-  },
-  warning = function(w) {
-    # Check if there is an upstack calling handler that would muffle
-    # the warning. This avoids doing the expensive work below for a
-    # silenced warning (#5675).
-    if (check_muffled_warning(w)) {
+      # Cancel `w`
       maybe_restart("muffleWarning")
     }
-
-    local_error_context(dots = dots, .index = i, mask = mask)
-
-    warn(c(
-      cnd_bullet_header("computing"),
-      i = cnd_header(w),
-      i = cnd_bullet_cur_group_label(what = "warning")
-    ))
-
-    # Cancel `w`
-    maybe_restart("muffleWarning")
-  })
+  )
 
   is_zap <- map_lgl(new_columns, inherits, "rlang_zap")
   new_columns[is_zap] <- rep(list(NULL), sum(is_zap))
+
   used <- mask$get_used()
   names(used) <- mask$current_vars()
   attr(new_columns, "used") <- used
+
+  new_columns
+}
+
+mutate_col <- function(dot, data, mask, new_columns) {
+  rows <- mask$get_rows()
+
+  # get results from all the quosures that are expanded from ..i
+  # then ingest them after
+  quosures <- expand_across(dot)
+  quosures_results <- vector(mode = "list", length = length(quosures))
+
+  # First pass
+  for (k in seq_along(quosures)) {
+    quo <- quosures[[k]]
+    quo_data <- attr(quo, "dplyr:::data")
+    if (!is.null(quo_data$column)) {
+      context_poke("column", quo_data$column)
+    }
+    # a list in which each element is the result of
+    # evaluating the quosure in the "sliced data mask"
+    # recycling it appropriately to match the group size
+    #
+    # TODO: reinject hybrid evaluation at the R level
+    chunks <- NULL
+
+    # result after unchopping the chunks
+    result <- NULL
+
+    if (quo_is_symbol(quo)){
+      name <- as_string(quo_get_expr(quo))
+
+      if (name %in% names(new_columns)) {
+        # already have result and chunks
+        result <- new_columns[[name]]
+        chunks <- mask$resolve(name)
+      } else if (name %in% names(data)) {
+        # column from the original data
+        result <- data[[name]]
+        chunks <- mask$resolve(name)
+      }
+
+      if (inherits(data, "rowwise_df") && vec_is_list(result)) {
+        sizes <- list_sizes(result)
+        wrong <- which(sizes != 1)
+        if (length(wrong)) {
+          # same error as would have been generated by mask$eval_all_mutate()
+          group <- wrong[1L]
+          mask$set_current_group(group)
+
+          abort(
+            class = c("dplyr:::mutate_incompatible_size", "dplyr:::internal_error"),
+            dplyr_error_data = list(result_size = sizes[group], expected_size = 1)
+          )
+        }
+        result_ptype <- attr(result, "ptype", exact = TRUE)
+        if (length(result) == 0 && is.null(result_ptype)) {
+          # i.e. `vec_ptype_finalise(unspecified())` (#6369)
+          result <- logical()
+        } else {
+          result <- vec_unchop(result, ptype = result_ptype)
+        }
+      }
+    } else if (!quo_is_symbolic(quo) && !is.null(quo_get_expr(quo))) {
+      # constant, we still need both `result` and `chunks`
+      result <- quo_get_expr(quo)
+
+      result <- withCallingHandlers(
+        vec_recycle(result, vec_size(data)),
+        error = function(cnd) {
+          abort(
+            class = c("dplyr:::mutate_constant_recycle_error", "dplyr:::internal_error"),
+            constant_size = vec_size(result), data_size = vec_size(data)
+          )
+        }
+      )
+
+      chunks <- vec_chop(result, rows)
+    }
+
+    if (is.null(chunks)) {
+      if (is.null(quo_data$column)) {
+        chunks <- mask$eval_all_mutate(quo)
+      } else {
+        chunks <- withCallingHandlers(
+          mask$eval_all_mutate(quo),
+          error = function(cnd) {
+            msg <- glue("Problem while computing column `{quo_data$name_auto}`.")
+            abort(msg, call = call("across"), parent = cnd)
+          }
+        )
+      }
+    }
+
+    if (is.null(chunks)) {
+      next
+    }
+
+    # only unchop if needed
+    if (is.null(result)) {
+      if (length(rows) == 1) {
+        result <- chunks[[1]]
+      } else {
+        chunks <- dplyr_vec_cast_common(chunks, quo_data$name_auto)
+        result <- vec_unchop(chunks, rows)
+      }
+    }
+
+    quosures_results[[k]] <- list(result = result, chunks = chunks)
+  }
+
+  # Second pass
+  for (k in seq_along(quosures)) {
+    quo <- quosures[[k]]
+    quo_data <- attr(quo, "dplyr:::data")
+
+    quo_result <- quosures_results[[k]]
+    if (is.null(quo_result)) {
+      if (quo_data$is_named) {
+        name <- quo_data$name_given
+        new_columns[[name]] <- zap()
+        mask$remove(name)
+      }
+      next
+    }
+
+    result <- quo_result$result
+    chunks <- quo_result$chunks
+
+    if (!quo_data$is_named && is.data.frame(result)) {
+      types <- vec_ptype(result)
+      types_names <- names(types)
+      chunks_extracted <- .Call(dplyr_extract_chunks, chunks, types)
+
+      for (j in seq_along(types)) {
+        mask$add_one(types_names[j], chunks_extracted[[j]], result = result[[j]])
+      }
+
+      new_columns[types_names] <- result
+    } else {
+      # treat as a single output otherwise
+      name <- quo_data$name_auto
+      mask$add_one(name = name, chunks = chunks, result = result)
+
+      new_columns[[name]] <- result
+    }
+  }
+
   new_columns
 }
 
