@@ -172,7 +172,7 @@ mutate.data.frame <- function(.data,
                               .after = NULL) {
   keep <- arg_match(.keep)
 
-  cols <- mutate_cols(.data, dplyr_quosures(...), caller_env = caller_env())
+  cols <- mutate_cols(.data, dplyr_quosures(...))
   used <- attr(cols, "used")
 
   out <- dplyr_col_modify(.data, cols)
@@ -218,13 +218,13 @@ mutate.data.frame <- function(.data,
 
 # Helpers -----------------------------------------------------------------
 
-mutate_cols <- function(.data, dots, caller_env, error_call = caller_env()) {
+mutate_cols <- function(.data, dots, error_call = caller_env()) {
   # Collect dots before setting up error handlers (#6178)
   force(dots)
 
   error_call <- dplyr_error_call(error_call)
 
-  mask <- DataMask$new(.data, caller_env, "mutate", error_call = error_call)
+  mask <- DataMask$new(.data, "mutate", error_call = error_call)
   old_current_column <- context_peek_bare("column")
 
   on.exit(context_poke("column", old_current_column), add = TRUE)
@@ -340,7 +340,7 @@ mutate_col <- function(dot, data, mask, new_columns) {
           # i.e. `vec_ptype_finalise(unspecified())` (#6369)
           result <- logical()
         } else {
-          result <- vec_unchop(result, ptype = result_ptype)
+          result <- list_unchop(result, ptype = result_ptype)
         }
       }
     } else if (!quo_is_symbolic(quo) && !is.null(quo_get_expr(quo))) {
@@ -384,7 +384,7 @@ mutate_col <- function(dot, data, mask, new_columns) {
         result <- chunks[[1]]
       } else {
         chunks <- dplyr_vec_cast_common(chunks, quo_data$name_auto)
-        result <- vec_unchop(chunks, rows)
+        result <- list_unchop(chunks, rows)
       }
     }
 

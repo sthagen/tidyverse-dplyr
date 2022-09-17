@@ -1,5 +1,14 @@
 # dplyr (development version)
 
+* `group_by_prepare()` loses the `caller_env` argument. It was rarely used
+  and it is no longer needed (#6444).
+
+* `nth()`, `first()`, `last()`, and `with_order()` now sort character `order_by`
+  vectors in the C locale. Using character vectors for `order_by` is rare, so we
+  expect this to have little practical impact (#6451).
+
+* `slice()`ing with a 1-column matrix is now deprecated.
+
 * `row_number()`, `min_rank()`, `dense_rank()`, `ntile()`, `cume_dist()`, and
   `percent_rank()` are now powered by vctrs, meaning that they are faster and
   work for more types. You can now also rank by multiple columns at once by
@@ -292,10 +301,10 @@
       `join_by(sale_date >= commercial_date)` to find every commercial that
       aired before a particular sale.
       
-    * Rolling joins: For "rolling" the preceding value forward or the following
-      value backwards when there isn't an exact match, specified by using one of
-      the rolling helpers: `preceding()` or `following()`. For example,
-      `join_by(preceding(sale_date, commercial_date))` to find only the most
+    * Rolling joins: For "rolling" the closest match forward or backwards when
+      there isn't an exact match, specified by using the rolling helper,
+      `closest()`. For example,
+      `join_by(closest(sale_date >= commercial_date))` to find only the most
       recent commercial that aired before a particular sale.
       
     * Overlap joins: For detecting overlaps between sets of columns, specified
