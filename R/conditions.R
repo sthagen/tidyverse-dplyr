@@ -42,7 +42,7 @@ arg_name <- function(quos, index) {
 cnd_bullet_cur_group_label <- function(what = "error") {
   label <- cur_group_label()
   if (label != "") {
-    glue("The {what} occurred in {label}.")
+    glue("In {label}.")
   }
 }
 
@@ -60,10 +60,20 @@ or_1 <- function(x) {
   }
 }
 
+needs_group_context <- function(cnd) {
+  !inherits_any(cnd, c(
+    "dplyr:::error_incompatible_combine",
+    "dplyr:::mutate_mixed_null",
+    "dplyr:::mutate_constant_recycle_error",
+    "dplyr:::summarise_mixed_null"
+  ))
+}
+
+
 # Common ------------------------------------------------------------------
 
 is_data_pronoun <- function(x) {
-  is_call(x, c("[[", "$")) && identical(node_cadr(x), sym(".data"))
+  is_call(x, c("[[", "$")) && identical(x[[2]], sym(".data"))
 }
 
 # Because as_label() strips off .data$<> and .data[[<>]]
@@ -76,23 +86,56 @@ quo_as_label <- function(quo)  {
   }
 }
 
-local_error_context <- function(dots, .index, mask, frame = caller_env()) {
-  expr <- dots[[.index]]
-  if (quo_is_call(expr, "invisible")) {
-    expr <- ""
-  } else {
-    expr <- quo_as_label(dots[[.index]])
-  }
-
-  error_context <- env(
-    error_name = arg_name(dots, .index),
-    error_expression = expr,
-    mask = mask
-  )
-  context_local("dplyr_error_context", error_context, frame = frame)
+local_error_context <- function(dots, i, mask, frame = caller_env()) {
+  ctxt <- new_error_context(dots, i, mask = mask)
+  context_local("dplyr_error_context", ctxt, frame = frame)
 }
 peek_error_context <- function() {
-  context_peek("dplyr_error_context", "peek_error_context", "dplyr error handling")
+  context_peek("dplyr_error_context", "dplyr error handling")
+}
+
+new_error_context <- function(dots, i, mask) {
+  if (!length(dots) || i == 0L) {
+    env(
+      error_name = "",
+      error_expression = NULL,
+      mask = mask
+    )
+  } else {
+    expr <- dot_as_label(dots[[i]])
+
+    env(
+      error_name = arg_name(dots, i),
+      error_expression = expr,
+      mask = mask
+    )
+  }
+}
+
+# Doesn't restore values. To be called within a
+# `local_error_context()` in charge of restoring.
+poke_error_context <- function(dots, i, mask) {
+  ctxt <- new_error_context(dots, i, mask = mask)
+  context_poke("dplyr_error_context", ctxt)
+}
+
+dot_as_label <- function(expr) {
+  if (quo_is_call(expr, "invisible")) {
+    ""
+  } else {
+    quo_as_label(expr)
+  }
+}
+
+mask_type <- function(mask = peek_mask()) {
+  if (mask$get_size() > 0) {
+    if (mask$is_grouped_df()) {
+      return("grouped")
+    } else if (mask$is_rowwise_df()) {
+      return("rowwise")
+    }
+  }
+  "ungrouped"
 }
 
 cnd_bullet_header <- function(what) {
@@ -106,14 +149,18 @@ cnd_bullet_header <- function(what) {
     sep <- ""
   }
 
-  glue("Problem while {what} `{error_name}{sep}{error_expression}`.")
+  if (is_string(what, "recycle")) {
+    glue("Can't {what} `{error_name}{sep}{error_expression}`.")
+  } else {
+    c("i" = glue("In argument: `{error_name}{sep}{error_expression}`."))
+  }
 }
 
 cnd_bullet_combine_details <- function(x, arg) {
-  group <- as.integer(sub("^..", "", arg))
-  keys <- peek_mask()$get_keys()[group, ]
-  details <- group_labels_details(keys)
-  glue("Result type for group {group} ({details}): <{vec_ptype_full(x)}>.")
+  id <- as.integer(sub("^..", "", arg))
+  group <- peek_mask()$get_keys()[id, ]
+  details <- cur_group_label(id = group, group = group)
+  glue("Result of type <{vec_ptype_full(x)}> for {details}.")
 }
 
 err_vars <- function(x) {
@@ -153,6 +200,9 @@ err_locs <- function(x) {
 dplyr_internal_error <- function(class = NULL, data = list()) {
   abort(class = c(class, "dplyr:::internal_error"), dplyr_error_data = data)
 }
+dplyr_internal_signal <- function(class) {
+  signal(message = "Internal dplyr signal", class = c(class, "dplyr:::internal_signal"))
+}
 
 skip_internal_condition <- function(cnd) {
   if (inherits(cnd, "dplyr:::internal_error")) {
@@ -160,4 +210,212 @@ skip_internal_condition <- function(cnd) {
   } else {
     cnd
   }
+}
+
+dplyr_error_handler <- function(dots,
+                                mask,
+                                bullets,
+                                error_call,
+                                action = "compute",
+                                error_class = NULL,
+                                i_sym = "i",
+                                frame = caller_env()) {
+  force(frame)
+
+  function(cnd) {
+    local_error_context(dots, i = frame[[i_sym]], mask = mask)
+
+    if (inherits(cnd, "dplyr:::internal_error")) {
+      parent <- error_cnd(message = bullets(cnd))
+    } else {
+      parent <- cnd
+    }
+
+    # FIXME: Must be after calling `bullets()` because the
+    # `dplyr:::summarise_incompatible_size` method sets the correct
+    # group by side effect
+    message <- c(
+      cnd_bullet_header(action),
+      "i" = if (needs_group_context(cnd)) cnd_bullet_cur_group_label()
+    )
+
+    abort(
+      message,
+      class = error_class,
+      parent = parent,
+      call = error_call
+    )
+  }
+}
+
+
+# Warnings -------------------------------------------------------------
+
+#' Show warnings from the last command
+#'
+#' Warnings that occur inside a dplyr verb like `mutate()` are caught
+#' and stashed away instead of being emitted to the console. This
+#' prevents rowwise and grouped data frames from flooding the console
+#' with warnings. To see the original warnings, use
+#' `last_dplyr_warnings()`.
+#'
+#' @param n Passed to [head()] so that only the first `n` warnings are
+#'   displayed.
+#' @keywords internal
+#' @export
+last_dplyr_warnings <- function(n = 5) {
+  if (!identical(n, Inf)) {
+    check_number(n)
+    stopifnot(n >= 0)
+  }
+
+  warnings <- the$last_warnings
+  n_remaining <- max(length(warnings) - n, 0L)
+
+  warnings <- head(warnings, n = n)
+  warnings <- map(warnings, new_dplyr_warning)
+
+  structure(
+    warnings,
+    class = c("last_dplyr_warnings", "list"),
+    n_shown = n,
+    n_remaining = n_remaining
+  )
+}
+
+on_load({
+  the$last_warnings <- list()
+  the$last_cmd_frame <- ""
+})
+
+dplyr_warning_handler <- function(state, mask, error_call) {
+  mask_type <- mask_type(mask)
+
+  # `error_call()` does some non-trivial work, e.g. climbing frame
+  # environments to find generic calls. We avoid evaluating it
+  # repeatedly in the loop by assigning it here (lazily as we only
+  # need it for the error path).
+  delayedAssign("error_call_forced", error_call(error_call))
+
+  function(cnd) {
+    # Don't entrace more than 5 warnings because this is very costly
+    if (is_null(cnd$trace) && length(state$warnings) < 5) {
+      cnd$trace <- trace_back(bottom = error_call)
+    }
+
+    new <- cnd_data(
+      cnd = cnd,
+      ctxt = peek_error_context(),
+      mask_type = mask_type,
+      call = error_call_forced
+    )
+
+    state$warnings <- c(state$warnings, list(new))
+    maybe_restart("muffleWarning")
+  }
+}
+
+# Flushes warnings if a new top-level command is detected
+push_dplyr_warnings <- function(warnings) {
+  last <- the$last_cmd_frame
+  current <- obj_address(sys.frame(1))
+
+  if (!identical(last, current)) {
+    reset_dplyr_warnings()
+    the$last_cmd_frame <- current
+  }
+
+  the$last_warnings <- c(the$last_warnings, warnings)
+}
+
+# Also used in tests
+reset_dplyr_warnings <- function() {
+  the$last_warnings <- list()
+}
+
+signal_warnings <- function(state, error_call) {
+  warnings <- state$warnings
+
+  n <- length(warnings)
+  if (!n) {
+    return()
+  }
+
+  push_dplyr_warnings(warnings)
+
+  first <- new_dplyr_warning(warnings[[1]])
+  call <- format_error_call(error_call)
+
+  if (nzchar(names2(cnd_header(first))[[1]])) {
+    prefix <- NULL
+  } else {
+    prefix <- paste0(cli::col_yellow("!"), " ")
+  }
+
+  msg <- paste_line(
+    cli::format_warning(c(
+      "There {cli::qty(n)} {?was/were} {n} warning{?s} in {call}.",
+      if (n > 1) "The first warning was:"
+    )),
+    paste0(prefix, cnd_message(first)),
+    if (n > 1) cli::format_warning(c(
+      i = "Run {.run dplyr::last_dplyr_warnings()} to see the {n - 1} remaining warning{?s}."
+    ))
+  )
+
+  warn(msg, use_cli_format = FALSE)
+}
+
+new_dplyr_warning <- function(data) {
+  label <- cur_group_label(
+    data$type,
+    data$group_data$id,
+    data$group_data$group
+  )
+
+  msg <- c(
+    "i" = glue::glue("In argument `{data$name} = {data$expr}`."),
+    "i" = if (nzchar(label)) glue("In {label}.")
+  )
+
+  warning_cnd(
+    message = msg,
+    parent = data$cnd,
+    call = data$call,
+    trace = data$cnd$trace
+  )
+}
+
+#' @export
+print.last_dplyr_warnings <- function(x, ...) {
+  # Opt into experimental grayed out tree
+  local_options(
+    "rlang:::trace_display_tree" = TRUE
+  )
+  print(unstructure(x), ..., simplify = "none")
+
+  n_remaining <- attr(x, "n_remaining")
+  if (n_remaining) {
+    n_more <- attr(x, "n_shown") * 2
+    cli::cli_bullets(c(
+      "... with {n_remaining} more warning{?s}.",
+      "i" = "Run {.run dplyr::last_dplyr_warnings(n = {n_more})} to show more."
+    ))
+  }
+}
+
+# rlang should export this routine
+error_call <- function(call) {
+  tryCatch(
+    abort("", call = call),
+    error = conditionCall
+  )
+}
+
+cnd_message_lines <- function(cnd, ...) {
+  c(
+    "!" = cnd_header(cnd, ...),
+    cnd_body(cnd, ...),
+    cnd_footer(cnd, ...)
+  )
 }

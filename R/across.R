@@ -208,14 +208,14 @@ across <- function(.cols = everything(),
   )
 
   if (!missing(...)) {
-    details <- paste_line(
+    details <- c(
       "Supply arguments directly to `.fns` through a lambda instead.",
       "",
-      "  # Previously",
-      "  across(a:b, mean, na.rm = TRUE)",
+      " " = "# Previously",
+      " " = "across(a:b, mean, na.rm = TRUE)",
       "",
-      "  # Now",
-      "  across(a:b, ~mean(.x, na.rm = TRUE))"
+      " " = "# Now",
+      " " = "across(a:b, ~mean(.x, na.rm = TRUE))"
     )
     lifecycle::deprecate_warn(
       when = "1.1.0",
@@ -272,7 +272,7 @@ across <- function(.cols = everything(),
       }
     }, error = function(cnd) {
       bullets <- c(
-        glue("Problem while computing column `{names[k]}`.")
+        glue("Can't compute column `{names[k]}`.")
       )
       abort(bullets, call = call(setup$across_if_fn), parent = cnd)
     }

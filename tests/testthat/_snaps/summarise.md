@@ -44,45 +44,48 @@
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while computing `a = rlang::env(a = 1)`.
-      x `a` must be a vector, not an environment.
+      i In argument: `a = rlang::env(a = 1)`.
+      Caused by error:
+      ! `a` must be a vector, not an environment.
     Code
       (expect_error(tibble(x = 1, y = c(1, 2, 2), z = runif(3)) %>% group_by(x, y) %>%
         summarise(a = rlang::env(a = 1))))
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while computing `a = rlang::env(a = 1)`.
-      x `a` must be a vector, not an environment.
-      i The error occurred in group 1: x = 1, y = 1.
+      i In argument: `a = rlang::env(a = 1)`.
+      i In group 1: `x = 1`, `y = 1`.
+      Caused by error:
+      ! `a` must be a vector, not an environment.
     Code
       (expect_error(tibble(x = 1, y = c(1, 2, 2), z = runif(3)) %>% rowwise() %>%
         summarise(a = lm(y ~ x))))
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while computing `a = lm(y ~ x)`.
-      x `a` must be a vector, not a <lm> object.
+      i In argument: `a = lm(y ~ x)`.
+      i In row 1.
+      Caused by error:
+      ! `a` must be a vector, not a <lm> object.
       i Did you mean: `a = list(lm(y ~ x))` ?
-      i The error occurred in row 1.
     Code
       (expect_error(tibble(id = 1:2, a = list(1, "2")) %>% group_by(id) %>% summarise(
         a = a[[1]])))
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while computing `a = a[[1]]`.
+      i In argument: `a = a[[1]]`.
       Caused by error:
       ! `a` must return compatible vectors across groups.
-      i Result type for group 1 (id = 1): <double>.
-      i Result type for group 2 (id = 2): <character>.
+      i Result of type <double> for group 1: `id = 1`.
+      i Result of type <character> for group 2: `id = 2`.
     Code
       (expect_error(tibble(id = 1:2, a = list(1, "2")) %>% rowwise() %>% summarise(a = a[[
         1]])))
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while computing `a = a[[1]]`.
+      i In argument: `a = a[[1]]`.
       Caused by error:
       ! `a` must return compatible vectors across groups.
     Code
@@ -90,43 +93,47 @@
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while recycling `y = 1:2`.
-      x `y` must be size 3 or 1, not 2.
+      ! Can't recycle `y = 1:2`.
+      Caused by error:
+      ! `y` must be size 3 or 1, not 2.
       i An earlier column had size 3.
     Code
       (expect_error(tibble(z = 1:2) %>% group_by(z) %>% summarise(x = 1:3, y = 1:2)))
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while recycling `y = 1:2`.
-      x `y` must be size 3 or 1, not 2.
+      ! Can't recycle `y = 1:2`.
+      i In group 1: `z = 1`.
+      Caused by error:
+      ! `y` must be size 3 or 1, not 2.
       i An earlier column had size 3.
-      i The error occurred in group 1: z = 1.
     Code
       (expect_error(tibble(z = c(1, 3)) %>% group_by(z) %>% summarise(x = seq_len(z),
       y = 1:2)))
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while recycling `y = 1:2`.
-      x `y` must be size 3 or 1, not 2.
+      ! Can't recycle `y = 1:2`.
+      i In group 2: `z = 3`.
+      Caused by error:
+      ! `y` must be size 3 or 1, not 2.
       i An earlier column had size 3.
-      i The error occurred in group 2: z = 3.
     Code
       (expect_error(data.frame(x = 1:2, g = 1:2) %>% group_by(g) %>% summarise(x = if (
         g == 1) 42)))
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while computing `x = if (g == 1) 42`.
-      x `x` must return compatible vectors across groups.
+      i In argument: `x = if (g == 1) 42`.
+      Caused by error:
+      ! `x` must return compatible vectors across groups.
       x Can't combine NULL and non NULL results.
     Code
       (expect_error(summarise(mtcars, a = mean(not_there))))
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while computing `a = mean(not_there)`.
+      i In argument: `a = mean(not_there)`.
       Caused by error in `mean()`:
       ! object 'not_there' not found
     Code
@@ -134,8 +141,8 @@
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while computing `a = mean(not_there)`.
-      i The error occurred in group 1: cyl = 4.
+      i In argument: `a = mean(not_there)`.
+      i In group 1: `cyl = 4`.
       Caused by error in `mean()`:
       ! object 'not_there' not found
     Code
@@ -143,7 +150,7 @@
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while computing `c = .data$b`.
+      i In argument: `c = .data$b`.
       Caused by error in `.data$b`:
       ! Column `b` not found in `.data`.
     Code
@@ -151,8 +158,8 @@
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while computing `c = .data$b`.
-      i The error occurred in group 1: a = 1.
+      i In argument: `c = .data$b`.
+      i In group 1: `a = 1`.
       Caused by error in `.data$b`:
       ! Column `b` not found in `.data`.
     Code
@@ -166,7 +173,7 @@
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while computing `..1 = stop("{")`.
+      i In argument: `..1 = stop("{")`.
       Caused by error:
       ! {
     Code
@@ -175,8 +182,8 @@
     Output
       <error/rlang_error>
       Error in `summarise()`:
-      ! Problem while computing `a = stop("!")`.
-      i The error occurred in group 1: b = "{value:1, unit:a}".
+      i In argument: `a = stop("!")`.
+      i In group 1: `b = "{value:1, unit:a}"`.
       Caused by error:
       ! !
 

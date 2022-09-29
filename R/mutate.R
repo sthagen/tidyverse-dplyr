@@ -231,48 +231,32 @@ mutate_cols <- function(.data, dots, error_call = caller_env()) {
   on.exit(mask$forget(), add = TRUE)
 
   new_columns <- set_names(list(), character())
+  warnings_state <- env(warnings = list())
+
+  local_error_context(dots, 0L, mask = mask)
 
   withCallingHandlers(
     for (i in seq_along(dots)) {
+      poke_error_context(dots, i, mask = mask)
       context_poke("column", old_current_column)
+
       new_columns <- mutate_col(dots[[i]], .data, mask, new_columns)
     },
-    error = function(e) {
-      local_error_context(dots = dots, .index = i, mask = mask)
-
-      bullets <- c(
-        cnd_bullet_header("computing"),
-        mutate_bullets(e)
-      )
-
-      abort(
-        bullets,
-        class = "dplyr:::mutate_error",
-        parent = skip_internal_condition(e),
-        bullets = bullets,
-        call = error_call
-      )
-    },
-    warning = function(w) {
-      # Check if there is an upstack calling handler that would muffle
-      # the warning. This avoids doing the expensive work below for a
-      # silenced warning (#5675).
-      if (check_muffled_warning(w)) {
-        maybe_restart("muffleWarning")
-      }
-
-      local_error_context(dots = dots, .index = i, mask = mask)
-
-      warn(c(
-        cnd_bullet_header("computing"),
-        i = cnd_header(w),
-        i = cnd_bullet_cur_group_label(what = "warning")
-      ))
-
-      # Cancel `w`
-      maybe_restart("muffleWarning")
-    }
+    error = dplyr_error_handler(
+      dots = dots,
+      mask = mask,
+      bullets = mutate_bullets,
+      error_call = error_call,
+      error_class = "dplyr:::mutate_error"
+    ),
+    warning = dplyr_warning_handler(
+      state = warnings_state,
+      mask = mask,
+      error_call = error_call
+    )
   )
+
+  signal_warnings(warnings_state, error_call)
 
   is_zap <- map_lgl(new_columns, inherits, "rlang_zap")
   new_columns[is_zap] <- rep(list(NULL), sum(is_zap))
@@ -367,7 +351,7 @@ mutate_col <- function(dot, data, mask, new_columns) {
         chunks <- withCallingHandlers(
           mask$eval_all_mutate(quo),
           error = function(cnd) {
-            msg <- glue("Problem while computing column `{quo_data$name_auto}`.")
+            msg <- glue("Can't compute column `{quo_data$name_auto}`.")
             abort(msg, call = call("across"), parent = cnd)
           }
         )
@@ -434,10 +418,7 @@ mutate_col <- function(dot, data, mask, new_columns) {
 mutate_bullets <- function(cnd, ...) {
   UseMethod("mutate_bullets")
 }
-#' @export
-mutate_bullets.default <- function(cnd, ...) {
-  c(i = cnd_bullet_cur_group_label())
-}
+
 #' @export
 `mutate_bullets.dplyr:::mutate_incompatible_size` <- function(cnd, ...) {
   error_context <- peek_error_context()
@@ -446,16 +427,15 @@ mutate_bullets.default <- function(cnd, ...) {
   result_size <- cnd$dplyr_error_data$result_size
   expected_size <- cnd$dplyr_error_data$expected_size
   c(
-    x = glue("`{error_name}` must be size {or_1(expected_size)}, not {result_size}."),
-    i = cnd_bullet_rowwise_unlist(),
-    i = cnd_bullet_cur_group_label()
+    glue("`{error_name}` must be size {or_1(expected_size)}, not {result_size}."),
+    i = cnd_bullet_rowwise_unlist()
   )
 }
 #' @export
 `mutate_bullets.dplyr:::mutate_mixed_null` <- function(cnd, ...) {
   error_name <- peek_error_context()$error_name
   c(
-    x = glue("`{error_name}` must return compatible vectors across groups."),
+    glue("`{error_name}` must return compatible vectors across groups."),
     x = "Can't combine NULL and non NULL results.",
     i = cnd_bullet_rowwise_unlist()
   )
@@ -465,9 +445,8 @@ mutate_bullets.default <- function(cnd, ...) {
   error_name <- peek_error_context()$error_name
   result <- cnd$dplyr_error_data$result
   c(
-    x = glue("`{error_name}` must be a vector, not {obj_type_friendly(result)}."),
-    i = cnd_bullet_rowwise_unlist(),
-    i = cnd_bullet_cur_group_label()
+    glue("`{error_name}` must be a vector, not {obj_type_friendly(result)}."),
+    i = cnd_bullet_rowwise_unlist()
   )
 }
 #' @export
