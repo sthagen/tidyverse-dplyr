@@ -79,10 +79,6 @@ test_that("keys of non-equi conditions are not coerced if `keep = NULL`", {
   expect_type(out$id, "character")
   expect_type(out$col1, "double")
   expect_type(out$col2, "integer")
-
-  # But they are if `keep = FALSE`
-  out <- inner_join(bar, foo, by = join_by(id, col2 <= col1), keep = FALSE)
-  expect_type(out$col2, "double")
 })
 
 test_that("when keep = TRUE, left_join() preserves both sets of keys", {
@@ -149,20 +145,22 @@ test_that("when keep = TRUE, inner_join() preserves both sets of keys (#5581)", 
   expect_equal(out$a.y, c(3))
 })
 
-test_that("can use `keep = FALSE` with non-equi conditions that don't have duplicate keys (#6499)", {
+test_that("can't use `keep = FALSE` with non-equi conditions (#6499)", {
   df1 <- tibble(xl = c(1, 3), xu = c(4, 7))
   df2 <- tibble(yl = c(2, 5, 8), yu = c(6, 8, 9))
 
-  out <- left_join(df1, df2, join_by(overlaps(xl, xu, yl, yu)), keep = FALSE)
-  expect_identical(out, tibble(xl = c(1, 3, 3), xu = c(4, 7, 7)))
+  expect_snapshot(error = TRUE, {
+    left_join(df1, df2, join_by(overlaps(xl, xu, yl, yu)), keep = FALSE)
+  })
 
-  # The key merging is a bit strange here, due to the fact that the underlying
-  # binary conditions are: `xl <= yu, xu >= yl`. It results in an `xl/xu` column
-  # that no longer has the `xl <= xu` invariant anymore.
-  # TODO: Consider making `keep = FALSE` an error when non-equi keys are
-  # present (#6499).
-  out <- full_join(df1, df2, join_by(overlaps(xl, xu, yl, yu)), keep = FALSE)
-  expect_identical(out, tibble(xl = c(1, 3, 3, 9), xu = c(4, 7, 7, 8)))
+  # Would never make sense here.
+  # Based on how the binary conditions are generated we'd merge:
+  # - `yu` into `xl`
+  # - `yl` into `xu`
+  # Which results in `xl` and `xu` columns that don't maintain `xl <= xu`.
+  expect_snapshot(error = TRUE, {
+    full_join(df1, df2, join_by(overlaps(xl, xu, yl, yu)), keep = FALSE)
+  })
 })
 
 test_that("joins matches NAs by default (#892, #2033)", {
@@ -205,6 +203,48 @@ test_that("joins don't match NA when na_matches = 'never' (#2033)", {
     full_join(dat1, dat3, by = "name", na_matches = "never"),
     tibble(name = c("a", "c", NA), var1 = c(1, 2, NA), var3 = c(5, NA, 6))
   )
+})
+
+test_that("joins using `between(bounds =)` work as expected (#6488)", {
+  df1 <- tibble(x = 1:5)
+  df2 <- tibble(lower = 2, upper = 4)
+
+  out <- full_join(df1, df2, by = join_by(between(x, lower, upper, bounds = "[]")))
+  expect_identical(out$lower, c(NA, 2, 2, 2, NA))
+  expect_identical(out$upper, c(NA, 4, 4, 4, NA))
+
+  out <- full_join(df1, df2, by = join_by(between(x, lower, upper, bounds = "[)")))
+  expect_identical(out$lower, c(NA, 2, 2, NA, NA))
+  expect_identical(out$upper, c(NA, 4, 4, NA, NA))
+
+  out <- full_join(df1, df2, by = join_by(between(x, lower, upper, bounds = "(]")))
+  expect_identical(out$lower, c(NA, NA, 2, 2, NA))
+  expect_identical(out$upper, c(NA, NA, 4, 4, NA))
+
+  out <- full_join(df1, df2, by = join_by(between(x, lower, upper, bounds = "()")))
+  expect_identical(out$lower, c(NA, NA, 2, NA, NA))
+  expect_identical(out$upper, c(NA, NA, 4, NA, NA))
+})
+
+test_that("joins using `overlaps(bounds =)` work as expected (#6488)", {
+  df1 <- tibble(x_lower = c(1, 1, 3, 4), x_upper = c(2, 3, 4, 5))
+  df2 <- tibble(y_lower = 2, y_upper = 4)
+
+  expect_closed <- vec_cbind(df1, vec_c(df2, df2, df2, df2))
+
+  out <- full_join(df1, df2, by = join_by(overlaps(x_lower, x_upper, y_lower, y_upper, bounds = "[]")))
+  expect_identical(out, expect_closed)
+
+  # `[)`, `(]`, and `()` all generate the same binary conditions but are useful
+  # for consistency with `between(bounds =)`
+  expect_open <- vec_cbind(df1, vec_c(NA, df2, df2, NA))
+
+  out <- full_join(df1, df2, by = join_by(overlaps(x_lower, x_upper, y_lower, y_upper, bounds = "[)")))
+  expect_identical(out, expect_open)
+  out <- full_join(df1, df2, by = join_by(overlaps(x_lower, x_upper, y_lower, y_upper, bounds = "(]")))
+  expect_identical(out, expect_open)
+  out <- full_join(df1, df2, by = join_by(overlaps(x_lower, x_upper, y_lower, y_upper, bounds = "()")))
+  expect_identical(out, expect_open)
 })
 
 test_that("join_mutate() validates arguments", {
