@@ -12,12 +12,15 @@
 #' the predicate is `TRUE` for *any* of the selected columns, `if_all()`
 #' is `TRUE` when the predicate is `TRUE` for *all* selected columns.
 #'
+#' If you just need to select columns without applying a transformation to each
+#' of them, then you probably want to use [pick()] instead.
+#'
 #' `across()` supersedes the family of "scoped variants" like
 #' `summarise_at()`, `summarise_if()`, and `summarise_all()`.
 #'
 #' @param .cols <[`tidy-select`][dplyr_tidy_select]> Columns to transform.
-#'   Because `across()` is used within functions like `summarise()` and
-#'   `mutate()`, you can't select or compute upon grouping variables.
+#'   You can't select grouping columns because they are already automatically
+#'   handled by the verb (i.e. [summarise()] or [mutate()]).
 #' @param .fns Functions to apply to each of the selected columns.
 #'   Possible values are:
 #'
@@ -27,9 +30,6 @@
 #'     `list(mean = mean, n_miss = ~ sum(is.na(.x))`. Each function is applied
 #'     to each column, and the output is named by combining the function name
 #'     and the column name using the glue specification in `.names`.
-#'   - `NULL`: the default, returns the selected columns in a data frame
-#'     without applying a transformation. This is useful for when you want to
-#'     use a function that takes a data frame.
 #'
 #'   Within these functions you can use [cur_column()] and [cur_group()]
 #'   to access the current column and grouping keys respectively.
@@ -160,17 +160,6 @@
 #'   mutate(across(starts_with("Sepal"), multilag, .unpack = TRUE)) %>%
 #'   select(Species, starts_with("Sepal"))
 #'
-#' # across() returns a data frame, which can be used as input of another function
-#' df <- data.frame(
-#'   x1  = c(1, 2, NA),
-#'   x2  = c(4, NA, 6),
-#'   y   = c("a", "b", "c")
-#' )
-#' df %>%
-#'   mutate(x_complete = complete.cases(across(starts_with("x"))))
-#' df %>%
-#'   filter(complete.cases(across(starts_with("x"))))
-#'
 #' # if_any() and if_all() ----------------------------------------------------
 #' iris %>%
 #'   filter(if_any(ends_with("Width"), ~ . > 4))
@@ -179,13 +168,25 @@
 #'
 #' @export
 #' @seealso [c_across()] for a function that returns a vector
-across <- function(.cols = everything(),
-                   .fns = NULL,
+across <- function(.cols,
+                   .fns,
                    ...,
                    .names = NULL,
                    .unpack = FALSE) {
   mask <- peek_mask()
   caller_env <- caller_env()
+
+  .cols <- enquo(.cols)
+
+  if (quo_is_missing(.cols)) {
+    across_missing_cols_deprecate_warn()
+    .cols <- quo_set_expr(.cols, expr(everything()))
+  }
+  if (is_missing(.fns)) {
+    # Silent restoration to old defaults of `.fns` for now.
+    # TODO: Escalate this to formal deprecation.
+    .fns <- NULL
+  }
 
   if (!is_bool(.unpack) && !is_string(.unpack)) {
     stop_input_type(.unpack, "`TRUE`, `FALSE`, or a single string")
@@ -199,7 +200,7 @@ across <- function(.cols = everything(),
   }
 
   setup <- across_setup(
-    {{ .cols }},
+    cols = !!.cols,
     fns = .fns,
     names = .names,
     .caller_env = caller_env,
@@ -226,13 +227,14 @@ across <- function(.cols = everything(),
 
   vars <- setup$vars
   if (length(vars) == 0L) {
-    return(new_tibble(list(), nrow = 1L))
+    return(dplyr_new_tibble(list(), size = 1L))
   }
   fns <- setup$fns
   names <- setup$names
 
   if (is.null(fns)) {
-    data <- mask$pick(vars)
+    # TODO: Deprecate and remove the `.fns = NULL` path in favor of `pick()`
+    data <- mask$pick_current(vars)
 
     if (is.null(names)) {
       return(data)
@@ -281,7 +283,7 @@ across <- function(.cols = everything(),
   size <- vec_size_common(!!!out)
   out <- vec_recycle_common(!!!out, .size = size)
   names(out) <- names
-  out <- new_data_frame(out, n = size, class = c("tbl_df", "tbl"))
+  out <- dplyr_new_tibble(out, size = size)
 
   if (.unpack) {
     out <- df_unpack(out, unpack_spec, caller_env)
@@ -292,13 +294,13 @@ across <- function(.cols = everything(),
 
 #' @rdname across
 #' @export
-if_any <- function(.cols = everything(), .fns = NULL, ..., .names = NULL) {
+if_any <- function(.cols, .fns, ..., .names = NULL) {
   context_local("across_if_fn", "if_any")
   if_across(`|`, across({{ .cols }}, .fns, ..., .names = .names))
 }
 #' @rdname across
 #' @export
-if_all <- function(.cols = everything(), .fns = NULL, ..., .names = NULL) {
+if_all <- function(.cols, .fns, ..., .names = NULL) {
   context_local("across_if_fn", "if_all")
   if_across(`&`, across({{ .cols }}, .fns, ..., .names = .names))
 }
@@ -341,13 +343,17 @@ if_across <- function(op, df) {
 #'   mutate(
 #'     sum = sum(c_across(w:z)),
 #'     sd = sd(c_across(w:z))
-#'  )
-c_across <- function(cols = everything()) {
+#'   )
+c_across <- function(cols) {
+  mask <- peek_mask()
   cols <- enquo(cols)
 
-  mask <- peek_mask()
-  vars <- c_across_setup(!!cols, mask = mask)
+  if (quo_is_missing(cols)) {
+    c_across_missing_cols_deprecate_warn()
+    cols <- quo_set_expr(cols, expr(everything()))
+  }
 
+  vars <- c_across_setup(!!cols, mask = mask)
 
   cols <- mask$current_cols(vars)
   vec_c(!!!cols, .name_spec = zap())
@@ -372,7 +378,7 @@ across_setup <- function(cols,
 
   # `across()` is evaluated in a data mask so we need to remove the
   # mask layer from the quosure environment (#5460)
-  cols <- quo_set_env(cols, data_mask_top(quo_get_env(cols), recursive = FALSE, inherit = FALSE))
+  cols <- quo_set_env_to_data_mask_top(cols)
 
   across_if_fn <- context_peek_bare("across_if_fn") %||% "across"
 
@@ -387,17 +393,18 @@ across_setup <- function(cols,
     )
     abort(bullets, call = call(across_if_fn))
   }
-  across_cols <- mask$across_cols()
+  data <- mask$get_current_data(groups = FALSE)
 
   vars <- tidyselect::eval_select(
     cols,
-    data = across_cols,
+    data = data,
     error_call = call(across_if_fn)
   )
   names_vars <- names(vars)
-  vars <- names(across_cols)[vars]
+  vars <- names(data)[vars]
 
   if (is.null(fns)) {
+    # TODO: Eventually deprecate and remove the `.fns = NULL` path in favor of `pick()`
     if (!is.null(names)) {
       glue_mask <- across_glue_mask(.caller_env, .col = names_vars, .fn = "1")
       names <- vec_as_names(
@@ -422,7 +429,7 @@ across_setup <- function(cols,
   }
 
   if (!is.list(fns)) {
-    msg <- c("`.fns` must be NULL, a function, a formula, or a list of functions/formulas.")
+    msg <- c("`.fns` must be a function, a formula, or a list of functions/formulas.")
     abort(msg, call = call(across_if_fn))
   }
 
@@ -465,12 +472,17 @@ data_mask_top <- function(env, recursive = FALSE, inherit = FALSE) {
 
   env
 }
+quo_set_env_to_data_mask_top <- function(quo) {
+  env <- quo_get_env(quo)
+  env <- data_mask_top(env, recursive = FALSE, inherit = FALSE)
+  quo_set_env(quo, env)
+}
 
 c_across_setup <- function(cols, mask) {
   cols <- enquo(cols)
-  across_cols <- mask$across_cols()
+  data <- mask$get_current_data(groups = FALSE)
 
-  vars <- tidyselect::eval_select(expr(!!cols), across_cols)
+  vars <- tidyselect::eval_select(expr(!!cols), data)
   value <- names(vars)
 
   value
@@ -620,13 +632,22 @@ expand_across <- function(quo) {
   if (".cols" %in% names(expr)) {
     cols <- expr$.cols
   } else {
-    cols <- quote(everything())
+    across_missing_cols_deprecate_warn()
+    cols <- expr(everything())
   }
   cols <- as_quosure(cols, env)
 
+  if (".fns" %in% names(expr)) {
+    fns <- eval_tidy(expr$.fns, mask, env = env)
+  } else {
+    # In the missing case, silently restore the old default of `NULL`.
+    # TODO: Escalate this to formal deprecation.
+    fns <- NULL
+  }
+
   setup <- across_setup(
     !!cols,
-    fns = eval_tidy(expr$.fns, mask, env = env),
+    fns = fns,
     names = eval_tidy(expr$.names, mask, env = env),
     .caller_env = env,
     mask = dplyr_mask,
@@ -645,6 +666,7 @@ expand_across <- function(quo) {
 
   # No functions, so just return a list of symbols
   if (is.null(fns)) {
+    # TODO: Deprecate and remove the `.fns = NULL` path in favor of `pick()`
     expressions <- pmap(list(vars, names, seq_along(vars)), function(var, name, k) {
       quo <- new_quosure(sym(var), empty_env())
       quo <- new_dplyr_quosure(
@@ -744,6 +766,45 @@ is_inlinable_formula <- function(x, mask) {
   }
 }
 
+across_missing_cols_deprecate_warn <- function() {
+  across_if_fn <- context_peek_bare("across_if_fn") %||% "across"
+
+  # Passing the correct `user_env` through `expand_across()` to here is
+  # complicated, so instead we force the global environment. This means users
+  # won't ever see the "deprecated feature was likely used in the {pkg}"
+  # message, but the warning will still fire and that is more important.
+  user_env <- global_env()
+
+  cnd <- catch_cnd(classes = "lifecycle_warning_deprecated", {
+    lifecycle::deprecate_warn(
+      when = "1.1.0",
+      what = I(glue("Using `{across_if_fn}()` without supplying `.cols`")),
+      details = "Please supply `.cols` instead.",
+      user_env = user_env
+    )
+  })
+
+  if (is_null(cnd)) {
+    # Condition wasn't signaled
+    return(NULL)
+  }
+
+  # Subclassed so we can skip computing group context info when the warning
+  # is thrown from `expand_across()` outside of any group
+  class(cnd) <- c("dplyr:::warning_across_missing_cols_deprecated", class(cnd))
+
+  cnd_signal(cnd)
+}
+
+c_across_missing_cols_deprecate_warn <- function(user_env = caller_env(2)) {
+  lifecycle::deprecate_warn(
+    when = "1.1.0",
+    what = I("Using `c_across()` without supplying `cols`"),
+    details = "Please supply `cols` instead.",
+    user_env = user_env
+  )
+}
+
 df_unpack <- function(x, spec, caller_env, error_call = caller_env()) {
   size <- vec_size(x)
 
@@ -768,7 +829,7 @@ df_unpack <- function(x, spec, caller_env, error_call = caller_env()) {
   names(out) <- names
 
   out <- df_list(!!!out, .size = size, .name_repair = "minimal")
-  out <- new_data_frame(out, n = size, class = c("tbl_df", "tbl"))
+  out <- dplyr_new_tibble(out, size = size)
 
   vec_as_names(names(out), repair = "check_unique", call = error_call)
 

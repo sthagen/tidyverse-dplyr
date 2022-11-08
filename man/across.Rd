@@ -6,16 +6,16 @@
 \alias{if_all}
 \title{Apply a function (or functions) across multiple columns}
 \usage{
-across(.cols = everything(), .fns = NULL, ..., .names = NULL, .unpack = FALSE)
+across(.cols, .fns, ..., .names = NULL, .unpack = FALSE)
 
-if_any(.cols = everything(), .fns = NULL, ..., .names = NULL)
+if_any(.cols, .fns, ..., .names = NULL)
 
-if_all(.cols = everything(), .fns = NULL, ..., .names = NULL)
+if_all(.cols, .fns, ..., .names = NULL)
 }
 \arguments{
 \item{.cols}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> Columns to transform.
-Because \code{across()} is used within functions like \code{summarise()} and
-\code{mutate()}, you can't select or compute upon grouping variables.}
+You can't select grouping columns because they are already automatically
+handled by the verb (i.e. \code{\link[=summarise]{summarise()}} or \code{\link[=mutate]{mutate()}}).}
 
 \item{.fns}{Functions to apply to each of the selected columns.
 Possible values are:
@@ -26,9 +26,6 @@ Possible values are:
 \verb{list(mean = mean, n_miss = ~ sum(is.na(.x))}. Each function is applied
 to each column, and the output is named by combining the function name
 and the column name using the glue specification in \code{.names}.
-\item \code{NULL}: the default, returns the selected columns in a data frame
-without applying a transformation. This is useful for when you want to
-use a function that takes a data frame.
 }
 
 Within these functions you can use \code{\link[=cur_column]{cur_column()}} and \code{\link[=cur_group]{cur_group()}}
@@ -82,6 +79,9 @@ predicate function to a selection of columns and combine the
 results into a single logical vector: \code{if_any()} is \code{TRUE} when
 the predicate is \code{TRUE} for \emph{any} of the selected columns, \code{if_all()}
 is \code{TRUE} when the predicate is \code{TRUE} for \emph{all} selected columns.
+
+If you just need to select columns without applying a transformation to each
+of them, then you probably want to use \code{\link[=pick]{pick()}} instead.
 
 \code{across()} supersedes the family of "scoped variants" like
 \code{summarise_at()}, \code{summarise_if()}, and \code{summarise_all()}.
@@ -203,17 +203,6 @@ iris \%>\%
   group_by(Species) \%>\%
   mutate(across(starts_with("Sepal"), multilag, .unpack = TRUE)) \%>\%
   select(Species, starts_with("Sepal"))
-
-# across() returns a data frame, which can be used as input of another function
-df <- data.frame(
-  x1  = c(1, 2, NA),
-  x2  = c(4, NA, 6),
-  y   = c("a", "b", "c")
-)
-df \%>\%
-  mutate(x_complete = complete.cases(across(starts_with("x"))))
-df \%>\%
-  filter(complete.cases(across(starts_with("x"))))
 
 # if_any() and if_all() ----------------------------------------------------
 iris \%>\%
