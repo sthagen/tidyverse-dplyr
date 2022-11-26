@@ -20,12 +20,12 @@
       join_mutate(df, df, by = 1, type = "left")
     Condition
       Error:
-      ! `by` must be a (named) character vector, list, `join_by()` result, or NULL, not a number.
+      ! `by` must be a (named) character vector, list, `join_by()` result, or NULL, not the number 1.
     Code
       join_mutate(df, df, by = "x", type = "left", suffix = 1)
     Condition
       Error:
-      ! `suffix` must be a character vector of length 2, not a number of length 1.
+      ! `suffix` must be a character vector of length 2, not the number 1 of length 1.
     Code
       join_mutate(df, df, by = "x", type = "left", na_matches = "foo")
     Condition
@@ -40,7 +40,7 @@
       join_mutate(df, df, by = "x", type = "left", keep = 1)
     Condition
       Error:
-      ! `keep` must be `TRUE`, `FALSE`, or `NULL`, not a number.
+      ! `keep` must be `TRUE`, `FALSE`, or `NULL`, not the number 1.
 
 # join_filter() validates arguments
 
@@ -48,12 +48,22 @@
       join_filter(df, df, by = 1, type = "semi")
     Condition
       Error:
-      ! `by` must be a (named) character vector, list, `join_by()` result, or NULL, not a number.
+      ! `by` must be a (named) character vector, list, `join_by()` result, or NULL, not the number 1.
     Code
       join_filter(df, df, by = "x", type = "semi", na_matches = "foo")
     Condition
       Error:
       ! `na_matches` must be one of "na" or "never", not "foo".
+
+# mutating joins trigger multiple match warning
+
+    Code
+      out <- left_join(df1, df2, join_by(x))
+    Condition
+      Warning in `left_join()`:
+      Each row in `x` is expected to match at most 1 row in `y`.
+      i Row 1 of `x` matches multiple rows.
+      i If multiple matches are expected, set `multiple = "all"` to silence this warning.
 
 # mutating joins compute common columns
 
@@ -181,17 +191,17 @@
       nest_join(df1, df2, by = 1)
     Condition
       Error in `nest_join()`:
-      ! `by` must be a (named) character vector, list, `join_by()` result, or NULL, not a number.
+      ! `by` must be a (named) character vector, list, `join_by()` result, or NULL, not the number 1.
     Code
       nest_join(df1, df2, keep = 1)
     Condition
       Error in `nest_join()`:
-      ! `keep` must be `TRUE`, `FALSE`, or `NULL`, not a number.
+      ! `keep` must be `TRUE`, `FALSE`, or `NULL`, not the number 1.
     Code
       nest_join(df1, df2, name = 1)
     Condition
       Error in `nest_join()`:
-      ! `name` must be a single string, not a number.
+      ! `name` must be a single string, not the number 1.
     Code
       nest_join(df1, df2, na_matches = 1)
     Condition

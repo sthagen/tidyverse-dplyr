@@ -185,6 +185,23 @@ test_that("across() retains original ordering", {
   expect_named(mutate(df, a = 2, x = across(everything(), identity))$x, c("a", "b"))
 })
 
+test_that("across() throws meaningful error with failure during expansion (#6534)", {
+  df <- tibble(g = 1, x = 1, y = 2, z = 3)
+  gdf <- group_by(df, g)
+
+  # Ends up failing inside the empty `median()` call, which gets evaluated
+  # during `across()` expansion but outside any group context
+  expect_snapshot(error = TRUE, {
+    summarise(df, across(everything(), median()))
+  })
+  expect_snapshot(error = TRUE, {
+    summarise(df, across(everything(), median()), .by = g)
+  })
+  expect_snapshot(error = TRUE, {
+    summarise(gdf, across(everything(), median()))
+  })
+})
+
 test_that("across() gives meaningful messages", {
   expect_snapshot({
     # expanding
@@ -913,7 +930,8 @@ test_that("expand_across() expands lambdas", {
     index = 1
   )
 
-  DataMask$new(mtcars, "mutate", call("caller"))
+  by <- compute_by(by = NULL, data = mtcars, error_call = call("caller"))
+  DataMask$new(mtcars, by, "mutate", call("caller"))
 
   expect_equal(
     map(expand_across(quo), quo_get_expr),
@@ -934,7 +952,8 @@ test_that("expand_if_across() expands lambdas", {
     index = 1
   )
 
-  DataMask$new(mtcars, "mutate", call("caller"))
+  by <- compute_by(by = NULL, data = mtcars, error_call = call("caller"))
+  DataMask$new(mtcars, by, "mutate", call("caller"))
 
   expect_equal(
     map(expand_if_across(quo), quo_squash),
@@ -968,6 +987,39 @@ test_that("selects and combines columns", {
   expect_equal(out$z, list(1:4))
 })
 
+test_that("can't rename during selection (#6522)", {
+  df <- tibble(x = 1)
+
+  expect_snapshot(error = TRUE, {
+    mutate(df, z = c_across(c(y = x)))
+  })
+})
+
+test_that("can't explicitly select grouping columns (#6522)", {
+  # Related to removing the mask layer from the quosure environments
+  df <- tibble(g = 1, x = 2)
+  gdf <- group_by(df, g)
+
+  expect_snapshot(error = TRUE, {
+    mutate(gdf, y = c_across(g))
+  })
+})
+
+test_that("`all_of()` is evaluated in the correct environment (#6522)", {
+  # Related to removing the mask layer from the quosure environments
+  df <- tibble(x = 1, y = 2)
+
+  expect_snapshot(error = TRUE, {
+    mutate(df, z = c_across(all_of(y)))
+  })
+
+  y <- "x"
+  expect <- df[["x"]]
+
+  out <- mutate(df, z = c_across(all_of(y)))
+  expect_identical(out$z, expect)
+})
+
 # cols deprecation --------------------------------------------------------
 
 test_that("across() applies old `.cols = everything()` default with a warning", {
@@ -976,17 +1028,27 @@ test_that("across() applies old `.cols = everything()` default with a warning", 
   df <- tibble(g = c(1, 2), x = c(1, 2), y = c(3, 4))
   gdf <- group_by(df, g)
 
+  times_two <- function(x) x * 2
+
   # Expansion path
-  expect_snapshot(out <- mutate(df, z = across()))
-  expect_identical(out$z, df)
-  expect_snapshot(out <- mutate(gdf, z = across()))
-  expect_identical(out$z, df[c("x", "y")])
+  expect_snapshot(out <- mutate(df, across(.fns = times_two)))
+  expect_identical(out$g, df$g * 2)
+  expect_identical(out$x, df$x * 2)
+  expect_identical(out$y, df$y * 2)
+  expect_snapshot(out <- mutate(gdf, across(.fns = times_two)))
+  expect_identical(out$g, df$g)
+  expect_identical(out$x, df$x * 2)
+  expect_identical(out$y, df$y * 2)
 
   # Evaluation path
-  expect_snapshot(out <- mutate(df, z = (across())))
-  expect_identical(out$z, df)
-  expect_snapshot(out <- mutate(gdf, z = (across())))
-  expect_identical(out$z, df[c("x", "y")])
+  expect_snapshot(out <- mutate(df, (across(.fns = times_two))))
+  expect_identical(out$g, df$g * 2)
+  expect_identical(out$x, df$x * 2)
+  expect_identical(out$y, df$y * 2)
+  expect_snapshot(out <- mutate(gdf, (across(.fns = times_two))))
+  expect_identical(out$g, df$g)
+  expect_identical(out$x, df$x * 2)
+  expect_identical(out$y, df$y * 2)
 })
 
 test_that("if_any() and if_all() apply old `.cols = everything()` default with a warning", {

@@ -47,7 +47,7 @@ cnd_bullet_cur_group_label <- function(what = "error") {
 }
 
 cnd_bullet_rowwise_unlist <- function() {
-  if (peek_mask()$is_rowwise_df()) {
+  if (peek_mask()$is_rowwise()) {
     glue_data(peek_error_context(), "Did you mean: `{error_name} = list({error_expression})` ?")
   }
 }
@@ -60,17 +60,9 @@ or_1 <- function(x) {
   }
 }
 
-needs_group_context <- function(cnd) {
-  !inherits_any(cnd, c(
-    "dplyr:::error_incompatible_combine",
-    "dplyr:::mutate_mixed_null",
-    "dplyr:::mutate_constant_recycle_error",
-    "dplyr:::summarise_mixed_null",
-    "dplyr:::error_pick_tidyselect",
-    "dplyr:::warning_across_missing_cols_deprecated"
-  ))
+has_active_group_context <- function(mask) {
+  mask$get_current_group() != 0L
 }
-
 
 # Common ------------------------------------------------------------------
 
@@ -131,9 +123,9 @@ dot_as_label <- function(expr) {
 
 mask_type <- function(mask = peek_mask()) {
   if (mask$get_size() > 0) {
-    if (mask$is_grouped_df()) {
+    if (mask$is_grouped()) {
       return("grouped")
-    } else if (mask$is_rowwise_df()) {
+    } else if (mask$is_rowwise()) {
       return("rowwise")
     }
   }
@@ -238,7 +230,7 @@ dplyr_error_handler <- function(dots,
     # group by side effect
     message <- c(
       cnd_bullet_header(action),
-      "i" = if (needs_group_context(cnd)) cnd_bullet_cur_group_label()
+      "i" = if (has_active_group_context(mask)) cnd_bullet_cur_group_label()
     )
 
     abort(
@@ -267,7 +259,7 @@ dplyr_error_handler <- function(dots,
 #' @export
 last_dplyr_warnings <- function(n = 5) {
   if (!identical(n, Inf)) {
-    check_number(n)
+    check_number_whole(n)
     stopifnot(n >= 0)
   }
 
@@ -291,8 +283,6 @@ on_load({
 })
 
 dplyr_warning_handler <- function(state, mask, error_call) {
-  mask_type <- mask_type(mask)
-
   # `error_call()` does some non-trivial work, e.g. climbing frame
   # environments to find generic calls. We avoid evaluating it
   # repeatedly in the loop by assigning it here (lazily as we only
@@ -308,7 +298,7 @@ dplyr_warning_handler <- function(state, mask, error_call) {
     new <- cnd_data(
       cnd = cnd,
       ctxt = peek_error_context(),
-      mask_type = mask_type,
+      mask = mask,
       call = error_call_forced
     )
 
@@ -369,7 +359,7 @@ signal_warnings <- function(state, error_call) {
 }
 
 new_dplyr_warning <- function(data) {
-  if (data$needs_group_context) {
+  if (data$has_group_data) {
     label <- cur_group_label(
       data$type,
       data$group_data$id,

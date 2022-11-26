@@ -362,16 +362,14 @@ test_that("can `pick()` inside `summarize()`", {
   expect_identical(out$count, expect_count)
 })
 
-test_that("recycles correctly with no inputs", {
-  skip("Until #6509 is fixed")
-
+test_that("recycles correctly with empty selection", {
   df <- tibble(x = 1:5)
 
-  out <- summarise(df, sum = sum(x), y = pick())
+  out <- summarise(df, sum = sum(x), y = pick(starts_with("foo")))
   expect_identical(out$sum, integer())
   expect_identical(out$y, new_tibble(list(), nrow = 0L))
 
-  out <- summarise(df, sum = sum(x), y = pick_wrapper())
+  out <- summarise(df, sum = sum(x), y = pick_wrapper(starts_with("foo")))
   expect_identical(out$sum, integer())
   expect_identical(out$y, new_tibble(list(), nrow = 0L))
 })
@@ -505,7 +503,8 @@ test_that("`pick()` can be used inside `group_by()` wrappers", {
 
 test_that("`pick()` doesn't expand across anonymous function boundaries", {
   df <- tibble(x = 1, y = 2)
-  mask <- DataMask$new(df, verb = "mutate", error_call = current_env())
+  by <- compute_by(by = NULL, data = df, error_call = current_env())
+  mask <- DataMask$new(df, by, verb = "mutate", error_call = current_env())
 
   # With inline `function() { }` calls (this also handles native R anonymous functions)
   quo <- dplyr_quosures(z = function() pick(y, x))$z
@@ -518,7 +517,8 @@ test_that("`pick()` doesn't expand across anonymous function boundaries", {
 
 test_that("`pick()` expands embedded quosures", {
   df <- tibble(x = 1, y = 2)
-  mask <- DataMask$new(df, verb = "mutate", error_call = current_env())
+  by <- compute_by(by = NULL, data = df, error_call = current_env())
+  mask <- DataMask$new(df, by, verb = "mutate", error_call = current_env())
 
   wrapper <- function(x) {
     dplyr_quosures(z = dense_rank({{x}}))

@@ -478,13 +478,23 @@ quo_set_env_to_data_mask_top <- function(quo) {
   quo_set_env(quo, env)
 }
 
-c_across_setup <- function(cols, mask) {
+c_across_setup <- function(cols, mask, error_call = caller_env()) {
   cols <- enquo(cols)
+
+  # `c_across()` is evaluated in a data mask so we need to remove the
+  # mask layer from the quosure environments (same as `across()`) (#5460, #6522)
+  cols <- quo_set_env_to_data_mask_top(cols)
+
   data <- mask$get_current_data(groups = FALSE)
 
-  vars <- tidyselect::eval_select(expr(!!cols), data)
-  value <- names(vars)
+  vars <- tidyselect::eval_select(
+    expr = cols,
+    data = data,
+    allow_rename = FALSE,
+    error_call = error_call
+  )
 
+  value <- names(vars)
   value
 }
 
@@ -775,25 +785,12 @@ across_missing_cols_deprecate_warn <- function() {
   # message, but the warning will still fire and that is more important.
   user_env <- global_env()
 
-  cnd <- catch_cnd(classes = "lifecycle_warning_deprecated", {
-    lifecycle::deprecate_warn(
-      when = "1.1.0",
-      what = I(glue("Using `{across_if_fn}()` without supplying `.cols`")),
-      details = "Please supply `.cols` instead.",
-      user_env = user_env
-    )
-  })
-
-  if (is_null(cnd)) {
-    # Condition wasn't signaled
-    return(NULL)
-  }
-
-  # Subclassed so we can skip computing group context info when the warning
-  # is thrown from `expand_across()` outside of any group
-  class(cnd) <- c("dplyr:::warning_across_missing_cols_deprecated", class(cnd))
-
-  cnd_signal(cnd)
+  lifecycle::deprecate_warn(
+    when = "1.1.0",
+    what = I(glue("Using `{across_if_fn}()` without supplying `.cols`")),
+    details = "Please supply `.cols` instead.",
+    user_env = user_env
+  )
 }
 
 c_across_missing_cols_deprecate_warn <- function(user_env = caller_env(2)) {

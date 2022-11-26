@@ -86,7 +86,7 @@ test_that("formulas are evaluated in the right environment (#3019)", {
   expect_identical(environment(out[[1]]), out[[2]])
 })
 
-test_that("data frame results with 0 columns are ignored (#5084)", {
+test_that("unnamed data frame results with 0 columns are ignored (#5084)", {
   df1 <- tibble(x = 1:2)
   expect_equal(df1 %>% group_by(x) %>% summarise(data.frame()), df1)
   expect_equal(df1 %>% group_by(x) %>% summarise(data.frame(), y = 65), mutate(df1, y = 65))
@@ -96,6 +96,46 @@ test_that("data frame results with 0 columns are ignored (#5084)", {
   expect_equal(df2 %>% group_by(x) %>% summarise(data.frame()), df1)
   expect_equal(df2 %>% group_by(x) %>% summarise(data.frame(), z = 98), mutate(df1, z = 98))
   expect_equal(df2 %>% group_by(x) %>% summarise(z = 98, data.frame()), mutate(df1, z = 98))
+
+  # This includes unnamed data frames that have 0 columns but >0 rows.
+  # Noted when working on (#6509).
+  empty3 <- new_tibble(list(), nrow = 3L)
+  expect_equal(df1 %>% summarise(empty3), new_tibble(list(), nrow = 1L))
+  expect_equal(df1 %>% summarise(empty3, y = mean(x)), df1 %>% summarise(y = mean(x)))
+  expect_equal(df1 %>% group_by(x) %>% summarise(empty3), df1)
+  expect_equal(df1 %>% group_by(x) %>% summarise(empty3, y = x + 1), mutate(df1, y = x + 1))
+})
+
+test_that("named data frame results with 0 columns participate in recycling (#6509)", {
+  df <- tibble(x = 1:3)
+  gdf <- group_by(df, x)
+
+  empty <- tibble()
+  expect_identical(summarise(df, empty = empty), tibble(empty = empty))
+  expect_identical(summarise(df, x = sum(x), empty = empty), tibble(x = integer(), empty = empty))
+  expect_identical(summarise(df, empty = empty, x = sum(x)), tibble(empty = empty, x = integer()))
+
+  empty3 <- new_tibble(list(), nrow = 3L)
+  expect_identical(summarise(df, empty = empty3), tibble(empty = empty3))
+  expect_identical(summarise(df, x = sum(x), empty = empty3), tibble(x = c(6L, 6L, 6L), empty = empty3))
+  expect_identical(summarise(df, empty = empty3, x = sum(x)), tibble(empty = empty3, x = c(6L, 6L, 6L)))
+
+  expect_identical(
+    summarise(gdf, empty = empty, .groups = "drop"),
+    tibble(x = integer(), empty = empty)
+  )
+  expect_identical(
+    summarise(gdf, y = x + 1L, empty = empty, .groups = "drop"),
+    tibble(x = integer(), y = integer(), empty = empty)
+  )
+  expect_identical(
+    summarise(gdf, empty = empty3, .groups = "drop"),
+    tibble(x = vec_rep_each(1:3, 3), empty = vec_rep(empty3, 3))
+  )
+  expect_identical(
+    summarise(gdf, y = x + 1L, empty = empty3, .groups = "drop"),
+    tibble(x = vec_rep_each(1:3, 3), y = vec_rep_each(2:4, 3), empty = vec_rep(empty3, 3))
+  )
 })
 
 # grouping ----------------------------------------------------------------
@@ -217,6 +257,76 @@ test_that("summarise() silently skips when all results are NULL (#5708)", {
   expect_error(summarise(df, x = if(g == 1) 42))
 })
 
+# .by ----------------------------------------------------------------------
+
+test_that("can group transiently using `.by`", {
+  df <- tibble(g = c(1, 1, 2, 1, 2), x = c(5, 2, 1, 2, 3))
+
+  out <- summarise(df, x = mean(x), .by = g)
+
+  expect_identical(out$g, c(1, 2))
+  expect_identical(out$x, c(3, 2))
+  expect_s3_class(out, class(df), exact = TRUE)
+})
+
+test_that("transient grouping retains bare data.frame class", {
+  df <- data.frame(g = c(1, 1, 2, 1, 2), x = c(5, 2, 1, 2, 3))
+  out <- summarise(df, x = mean(x), .by = g)
+  expect_s3_class(out, class(df), exact = TRUE)
+})
+
+test_that("transient grouping drops data frame attributes", {
+  # Because `summarise()` theoretically creates a "new" data frame
+
+  # With data.frames or tibbles
+  df <- data.frame(g = c(1, 1, 2), x = c(1, 2, 1))
+  tbl <- as_tibble(df)
+
+  attr(df, "foo") <- "bar"
+  attr(tbl, "foo") <- "bar"
+
+  out <- summarise(df, x = mean(x), .by = g)
+  expect_null(attr(out, "foo"))
+
+  out <- summarise(tbl, x = mean(x), .by = g)
+  expect_null(attr(out, "foo"))
+})
+
+test_that("transient grouping orders by first appearance", {
+  df <- tibble(g = c(2, 1, 2, 0), x = c(4, 2, 8, 5))
+
+  out <- summarise(df, x = mean(x), .by = g)
+
+  expect_identical(out$g, c(2, 1, 0))
+  expect_identical(out$x, c(6, 2, 5))
+})
+
+test_that("can't use `.by` with `.groups`", {
+  df <- tibble(x = 1)
+
+  expect_snapshot(error = TRUE, {
+    summarise(df, .by = x, .groups = "drop")
+  })
+})
+
+test_that("catches `.by` with grouped-df", {
+  df <- tibble(x = 1)
+  gdf <- group_by(df, x)
+
+  expect_snapshot(error = TRUE, {
+    summarise(gdf, .by = x)
+  })
+})
+
+test_that("catches `.by` with rowwise-df", {
+  df <- tibble(x = 1)
+  rdf <- rowwise(df)
+
+  expect_snapshot(error = TRUE, {
+    summarise(rdf, .by = x)
+  })
+})
+
 # errors -------------------------------------------------------------------
 
 test_that("summarise() preserves the call stack on error (#5308)", {
@@ -290,9 +400,12 @@ test_that("summarise() gives meaningful errors", {
                         summarise(x = seq_len(z), y = 1:2)
       ))
 
-      # NULL and no NULL
+      # mixed nulls
       (expect_error(
                       data.frame(x = 1:2, g = 1:2) %>% group_by(g) %>% summarise(x = if(g == 1) 42)
+      ))
+      (expect_error(
+                      data.frame(x = 1:2, g = 1:2) %>% group_by(g) %>% summarise(x = if(g == 2) 42)
       ))
 
       # Missing variable

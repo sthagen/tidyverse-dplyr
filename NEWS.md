@@ -1,5 +1,62 @@
 # dplyr (development version)
 
+* `slice()` now errors if any expressions in `...` are named. This helps avoid
+  accidentally misspelling an optional argument, such as `.by` (#6554).
+
+* `c_across()` now evaluates `all_of()` correctly and no longer allows you to
+  accidentally select grouping variables (#6522).
+
+* `c_across()` now throws a more informative error if you try to rename during
+  column selection (#6522).
+
+* `n_distinct()` now errors if you don't give it any input (#6535).
+
+* `group_walk()` gains an explict `.keep` argument (#6530).
+
+* `.by` is a new experimental inline alternative to `group_by()` that supports
+  _temporary_ grouping in the following key dplyr verbs: `mutate()`,
+  `summarise()`, `filter()`, and the `slice()` family (#6528).
+  
+  Rather than:
+  
+  ```
+  starwars %>%
+    group_by(species, homeworld) %>%
+    summarise(mean_height = mean(height))
+  ```
+  
+  You can now write:
+  
+  ```
+  starwars %>%
+    summarise(
+      mean_height = mean(height),
+      .by = c(species, homeworld)
+    )
+  ```
+  
+  The most useful reason to do this is because grouping with `.by` is
+  _temporary_ and only affects the verb it is being applied to. An ungrouped
+  data frame went into the `summarise()` call, so an ungrouped data frame will
+  come out; with `.by`, you never need to remember to `ungroup()` afterwards.
+  
+  Additionally, using `summarise()` or `slice()` with `.by` will never sort the
+  results by the group key, unlike with `group_by()`. Instead, the results are
+  returned using the existing ordering of the groups from the original data. We
+  feel this is more predictable, better maintains any ordering you might have
+  already applied with a previous call to `arrange()`, and provides a way to
+  maintain the current ordering without having to resort to factors.
+  
+  This exciting feature was inspired by
+  [data.table](https://CRAN.R-project.org/package=data.table), where the
+  equivalent syntax looks like:
+  
+  ```
+  starwars[, .(mean_height = mean(height)), by = .(species, homeworld)]
+  ```
+
+* `summarise()` now correctly recycles named 0-column data frames (#6509).
+
 * `.cols` and `.fns` are now required arguments in `across()`, `c_across()`,
   `if_any()`, and `if_all()`. In general, we now recommend that you use `pick()`
   instead of empty calls to `across()` (i.e. with no arguments) or
