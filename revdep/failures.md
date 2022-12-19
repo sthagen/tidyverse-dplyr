@@ -968,6 +968,41 @@ Run `cloud_details(, "NA")` for more info
 
 
 ```
+# NA
+
+<details>
+
+* Version: NA
+* GitHub: NA
+* Source code: https://github.com/cran/NA
+* Number of recursive dependencies: 0
+
+Run `cloud_details(, "NA")` for more info
+
+</details>
+
+## Error before installation
+
+### Devel
+
+```
+
+
+
+
+
+
+```
+### CRAN
+
+```
+
+
+
+
+
+
+```
 # genekitr
 
 <details>
@@ -1187,7 +1222,7 @@ ERROR: lazy loading failed for package ‘groupr’
 * GitHub: https://github.com/YuanlongHu/immcp
 * Source code: https://github.com/cran/immcp
 * Date/Publication: 2022-05-12 05:50:02 UTC
-* Number of recursive dependencies: 195
+* Number of recursive dependencies: 194
 
 Run `cloud_details(, "immcp")` for more info
 
@@ -1242,6 +1277,84 @@ Status: 1 ERROR
 
 
 
+
+
+```
+# ino
+
+<details>
+
+* Version: 0.2.0
+* GitHub: https://github.com/loelschlaeger/ino
+* Source code: https://github.com/cran/ino
+* Date/Publication: 2022-09-29 06:10:08 UTC
+* Number of recursive dependencies: 82
+
+Run `cloud_details(, "ino")` for more info
+
+</details>
+
+## In both
+
+*   checking whether package ‘ino’ can be installed ... ERROR
+    ```
+    Installation failed.
+    See ‘/tmp/workdir/ino/new/ino.Rcheck/00install.out’ for details.
+    ```
+
+## Installation
+
+### Devel
+
+```
+* installing *source* package ‘ino’ ...
+** package ‘ino’ successfully unpacked and MD5 sums checked
+** using staged installation
+** R
+** data
+*** moving datasets to lazyload DB
+Warning: namespace ‘ino’ is not available and has been replaced
+by .GlobalEnv when processing object ‘hmm_ino’
+Warning: namespace ‘ino’ is not available and has been replaced
+by .GlobalEnv when processing object ‘hmm_ino’
+...
+Warning: namespace ‘ino’ is not available and has been replaced
+by .GlobalEnv when processing object ‘probit_ino’
+Warning: namespace ‘ino’ is not available and has been replaced
+by .GlobalEnv when processing object ‘probit_ino’
+** inst
+** byte-compile and prepare package for lazy loading
+Error: object ‘optimizeR’ is not exported by 'namespace:optimizeR'
+Execution halted
+ERROR: lazy loading failed for package ‘ino’
+* removing ‘/tmp/workdir/ino/new/ino.Rcheck/ino’
+
+
+```
+### CRAN
+
+```
+* installing *source* package ‘ino’ ...
+** package ‘ino’ successfully unpacked and MD5 sums checked
+** using staged installation
+** R
+** data
+*** moving datasets to lazyload DB
+Warning: namespace ‘ino’ is not available and has been replaced
+by .GlobalEnv when processing object ‘hmm_ino’
+Warning: namespace ‘ino’ is not available and has been replaced
+by .GlobalEnv when processing object ‘hmm_ino’
+...
+Warning: namespace ‘ino’ is not available and has been replaced
+by .GlobalEnv when processing object ‘probit_ino’
+Warning: namespace ‘ino’ is not available and has been replaced
+by .GlobalEnv when processing object ‘probit_ino’
+** inst
+** byte-compile and prepare package for lazy loading
+Error: object ‘optimizeR’ is not exported by 'namespace:optimizeR'
+Execution halted
+ERROR: lazy loading failed for package ‘ino’
+* removing ‘/tmp/workdir/ino/old/ino.Rcheck/ino’
 
 
 ```
@@ -1484,72 +1597,6 @@ Run `cloud_details(, "NA")` for more info
 
 ```
 
-
-
-
-
-
-```
-# MarketMatching
-
-<details>
-
-* Version: 1.2.0
-* GitHub: NA
-* Source code: https://github.com/cran/MarketMatching
-* Date/Publication: 2021-01-08 20:10:02 UTC
-* Number of recursive dependencies: 72
-
-Run `cloud_details(, "MarketMatching")` for more info
-
-</details>
-
-## Error before installation
-
-### Devel
-
-```
-* using log directory ‘/tmp/workdir/MarketMatching/new/MarketMatching.Rcheck’
-* using R version 4.1.1 (2021-08-10)
-* using platform: x86_64-pc-linux-gnu (64-bit)
-* using session charset: UTF-8
-* using option ‘--no-manual’
-* checking for file ‘MarketMatching/DESCRIPTION’ ... OK
-* checking extension type ... Package
-* this is package ‘MarketMatching’ version ‘1.2.0’
-* checking package namespace information ... OK
-* checking package dependencies ... ERROR
-Packages required but not available: 'CausalImpact', 'bsts', 'Boom'
-
-See section ‘The DESCRIPTION file’ in the ‘Writing R Extensions’
-manual.
-* DONE
-Status: 1 ERROR
-
-
-
-
-
-```
-### CRAN
-
-```
-* using log directory ‘/tmp/workdir/MarketMatching/old/MarketMatching.Rcheck’
-* using R version 4.1.1 (2021-08-10)
-* using platform: x86_64-pc-linux-gnu (64-bit)
-* using session charset: UTF-8
-* using option ‘--no-manual’
-* checking for file ‘MarketMatching/DESCRIPTION’ ... OK
-* checking extension type ... Package
-* this is package ‘MarketMatching’ version ‘1.2.0’
-* checking package namespace information ... OK
-* checking package dependencies ... ERROR
-Packages required but not available: 'CausalImpact', 'bsts', 'Boom'
-
-See section ‘The DESCRIPTION file’ in the ‘Writing R Extensions’
-manual.
-* DONE
-Status: 1 ERROR
 
 
 
@@ -1820,6 +1867,142 @@ Status: 1 ERROR
 
 
 ```
+# nlmixr2rpt
+
+<details>
+
+* Version: 0.1.0
+* GitHub: https://github.com/nlmixr2/nlmixr2rpt
+* Source code: https://github.com/cran/nlmixr2rpt
+* Date/Publication: 2022-12-05 10:40:02 UTC
+* Number of recursive dependencies: 204
+
+Run `cloud_details(, "nlmixr2rpt")` for more info
+
+</details>
+
+## Error before installation
+
+### Devel
+
+```
+* using log directory ‘/tmp/workdir/nlmixr2rpt/new/nlmixr2rpt.Rcheck’
+* using R version 4.1.1 (2021-08-10)
+* using platform: x86_64-pc-linux-gnu (64-bit)
+* using session charset: UTF-8
+* using option ‘--no-manual’
+* checking for file ‘nlmixr2rpt/DESCRIPTION’ ... OK
+* this is package ‘nlmixr2rpt’ version ‘0.1.0’
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... ERROR
+Packages required but not available: 'nlmixr2extra', 'xpose.nlmixr2'
+
+Package suggested but not available for checking: ‘nlmixr2’
+
+See section ‘The DESCRIPTION file’ in the ‘Writing R Extensions’
+manual.
+* DONE
+Status: 1 ERROR
+
+
+
+
+
+```
+### CRAN
+
+```
+* using log directory ‘/tmp/workdir/nlmixr2rpt/old/nlmixr2rpt.Rcheck’
+* using R version 4.1.1 (2021-08-10)
+* using platform: x86_64-pc-linux-gnu (64-bit)
+* using session charset: UTF-8
+* using option ‘--no-manual’
+* checking for file ‘nlmixr2rpt/DESCRIPTION’ ... OK
+* this is package ‘nlmixr2rpt’ version ‘0.1.0’
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... ERROR
+Packages required but not available: 'nlmixr2extra', 'xpose.nlmixr2'
+
+Package suggested but not available for checking: ‘nlmixr2’
+
+See section ‘The DESCRIPTION file’ in the ‘Writing R Extensions’
+manual.
+* DONE
+Status: 1 ERROR
+
+
+
+
+
+```
+# numbat
+
+<details>
+
+* Version: 1.1.0
+* GitHub: https://github.com/kharchenkolab/numbat
+* Source code: https://github.com/cran/numbat
+* Date/Publication: 2022-11-29 18:30:02 UTC
+* Number of recursive dependencies: 183
+
+Run `cloud_details(, "numbat")` for more info
+
+</details>
+
+## Error before installation
+
+### Devel
+
+```
+* using log directory ‘/tmp/workdir/numbat/new/numbat.Rcheck’
+* using R version 4.1.1 (2021-08-10)
+* using platform: x86_64-pc-linux-gnu (64-bit)
+* using session charset: UTF-8
+* using option ‘--no-manual’
+* checking for file ‘numbat/DESCRIPTION’ ... OK
+* this is package ‘numbat’ version ‘1.1.0’
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... ERROR
+Packages required but not available: 'ggtree', 'scistreer'
+
+See section ‘The DESCRIPTION file’ in the ‘Writing R Extensions’
+manual.
+* DONE
+Status: 1 ERROR
+
+
+
+
+
+```
+### CRAN
+
+```
+* using log directory ‘/tmp/workdir/numbat/old/numbat.Rcheck’
+* using R version 4.1.1 (2021-08-10)
+* using platform: x86_64-pc-linux-gnu (64-bit)
+* using session charset: UTF-8
+* using option ‘--no-manual’
+* checking for file ‘numbat/DESCRIPTION’ ... OK
+* this is package ‘numbat’ version ‘1.1.0’
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... ERROR
+Packages required but not available: 'ggtree', 'scistreer'
+
+See section ‘The DESCRIPTION file’ in the ‘Writing R Extensions’
+manual.
+* DONE
+Status: 1 ERROR
+
+
+
+
+
+```
 # NA
 
 <details>
@@ -1863,7 +2046,7 @@ Run `cloud_details(, "NA")` for more info
 * GitHub: NA
 * Source code: https://github.com/cran/OlinkAnalyze
 * Date/Publication: 2022-11-16 00:30:05 UTC
-* Number of recursive dependencies: 203
+* Number of recursive dependencies: 202
 
 Run `cloud_details(, "OlinkAnalyze")` for more info
 
@@ -2103,6 +2286,41 @@ ERROR: lazy loading failed for package ‘rabhit’
 ** testing if installed package can be loaded from final location
 ** testing if installed package keeps a record of temporary installation path
 * DONE (rabhit)
+
+
+```
+# NA
+
+<details>
+
+* Version: NA
+* GitHub: NA
+* Source code: https://github.com/cran/NA
+* Number of recursive dependencies: 0
+
+Run `cloud_details(, "NA")` for more info
+
+</details>
+
+## Error before installation
+
+### Devel
+
+```
+
+
+
+
+
+
+```
+### CRAN
+
+```
+
+
+
+
 
 
 ```
