@@ -2,7 +2,7 @@
 
 ## New features
 
-* `.by` is an experimental alternative to `group_by()` that supports 
+* `.by`/`by` is an experimental alternative to `group_by()` that supports 
   per-operation grouping for `mutate()`, `summarise()`, `filter()`, and the 
   `slice()` family (#6528).
   
@@ -339,6 +339,9 @@ package, bringing greater consistency and improved performance.
 * Joins now reference the correct column in `y` when a type error is thrown
   while joining on two columns with different names (#6465).
 
+* Joins on very wide tables are no longer bottlenecked by the application of
+  `suffix` (#6642).
+
 * `*_join()` now error if you supply them with additional arguments that
   aren't used (#6228).
 
@@ -352,6 +355,9 @@ package, bringing greater consistency and improved performance.
 * Functions supplied to `across()` are no longer masked by columns (#6545). For
   instance, `across(1:2, mean)` will now work as expected even if there is a
   column called `mean`.
+  
+* `across()` will now error when supplied `...` without a `.fns` argument 
+  (#6638).
 
 * `arrange()` now correctly ignores `NULL` inputs (#6193).
 
