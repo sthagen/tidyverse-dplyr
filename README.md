@@ -17,12 +17,11 @@ coverage](https://codecov.io/gh/tidyverse/dplyr/branch/main/graph/badge.svg)](ht
 dplyr is a grammar of data manipulation, providing a consistent set of
 verbs that help you solve the most common data manipulation challenges:
 
--   `mutate()` adds new variables that are functions of existing
-    variables
--   `select()` picks variables based on their names.
--   `filter()` picks cases based on their values.
--   `summarise()` reduces multiple values down to a single summary.
--   `arrange()` changes the ordering of the rows.
+- `mutate()` adds new variables that are functions of existing variables
+- `select()` picks variables based on their names.
+- `filter()` picks cases based on their values.
+- `summarise()` reduces multiple values down to a single summary.
+- `arrange()` changes the ordering of the rows.
 
 These all combine naturally with `group_by()` which allows you to
 perform any operation “by group”. You can learn more about them in
@@ -40,23 +39,23 @@ In addition to data frames/tibbles, dplyr makes working with other
 computational backends accessible and efficient. Below is a list of
 alternative backends:
 
--   [arrow](https://arrow.apache.org/docs/r) for larger-than-memory
-    datasets, including on remote cloud storage like AWS S3, using the
-    Apache Arrow C++ engine,
-    [Acero](https://arrow.apache.org/docs/cpp/streaming_execution.html).
+- [arrow](https://arrow.apache.org/docs/r/) for larger-than-memory
+  datasets, including on remote cloud storage like AWS S3, using the
+  Apache Arrow C++ engine,
+  [Acero](https://arrow.apache.org/docs/cpp/streaming_execution.html).
 
--   [dtplyr](https://dtplyr.tidyverse.org/) for large, in-memory
-    datasets. Translates your dplyr code to high performance
-    [data.table](https://rdatatable.gitlab.io/data.table/) code.
+- [dtplyr](https://dtplyr.tidyverse.org/) for large, in-memory datasets.
+  Translates your dplyr code to high performance
+  [data.table](https://rdatatable.gitlab.io/data.table/) code.
 
--   [dbplyr](https://dbplyr.tidyverse.org/) for data stored in a
-    relational database. Translates your dplyr code to SQL.
+- [dbplyr](https://dbplyr.tidyverse.org/) for data stored in a
+  relational database. Translates your dplyr code to SQL.
 
--   [duckdb](https://duckdb.org/docs/api/r) for large datasets that are
-    still small enough to fit on your computer.
+- [duckdb](https://duckdb.org/docs/api/r) for large datasets that are
+  still small enough to fit on your computer.
 
--   [sparklyr](https://spark.rstudio.com) for very large datasets stored
-    in [Apache Spark](https://spark.apache.org).
+- [sparklyr](https://spark.rstudio.com) for very large datasets stored
+  in [Apache Spark](https://spark.apache.org).
 
 ## Installation
 
@@ -100,7 +99,6 @@ starwars %>%
 #> # … with 1 more row, 4 more variables: species <chr>, films <list>,
 #> #   vehicles <list>, starships <list>, and abbreviated variable names
 #> #   ¹​eye_color, ²​birth_year, ³​homeworld
-#> # ℹ Use `print(n = ...)` to see more rows, and `colnames()` to see all variable names
 
 starwars %>% 
   select(name, ends_with("color"))
@@ -113,7 +111,6 @@ starwars %>%
 #> 4 Darth Vader    none       white       yellow   
 #> 5 Leia Organa    brown      light       brown    
 #> # … with 82 more rows
-#> # ℹ Use `print(n = ...)` to see more rows
 
 starwars %>% 
   mutate(name, bmi = mass / ((height / 100)  ^ 2)) %>%
@@ -127,7 +124,6 @@ starwars %>%
 #> 4 Darth Vader       202   136  33.3
 #> 5 Leia Organa       150    49  21.8
 #> # … with 82 more rows
-#> # ℹ Use `print(n = ...)` to see more rows
 
 starwars %>% 
   arrange(desc(mass))
@@ -142,7 +138,6 @@ starwars %>%
 #> # … with 82 more rows, 4 more variables: species <chr>, films <list>,
 #> #   vehicles <list>, starships <list>, and abbreviated variable names
 #> #   ¹​hair_color, ²​skin_color, ³​eye_color, ⁴​birth_year, ⁵​homeworld
-#> # ℹ Use `print(n = ...)` to see more rows, and `colnames()` to see all variable names
 
 starwars %>%
   group_by(species) %>%
@@ -163,7 +158,6 @@ starwars %>%
 #> 4 Kaminoan     2  88  
 #> 5 Mirialan     2  53.1
 #> # … with 3 more rows
-#> # ℹ Use `print(n = ...)` to see more rows
 ```
 
 ## Getting help
