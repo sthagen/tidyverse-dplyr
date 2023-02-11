@@ -1,8 +1,37 @@
 # dplyr (development version)
 
+* Fixed an issue where expressions involving infix operators had an abnormally
+  large amount of overhead (#6681).
+
+* `nth()` now errors informatively if `n` is `NA` (#6682).
+
+* Fixed performance regression related to `nth()`, `first()`, and `last()`
+  (#6682).
+
+* `arrange()` can once again sort the `numeric_version` type from base R
+  (#6680).
+
+* Fixed an issue where using `<-` within a grouped `mutate()` or `summarise()`
+  could cross contaminate other groups (#6666).
+
+* Deprecation warnings thrown by `filter()` now mention the correct package
+  where the problem originated from (#6679).
+
+* The developer documentation in `?dplyr_extending` has been refreshed and
+  brought up to date with all changes made in 1.1.0 (#6695).
+
+* R >=3.5.0 is now explicitly required. This is in line with the tidyverse
+  policy of supporting the [5 most recent versions of
+  R](https://www.tidyverse.org/blog/2019/04/r-version-support/).
+
+* `rename_with()` now includes an example of using `paste0(recycle0 = TRUE)` to
+  correctly handle empty selections (#6688).
+
+# dplyr 1.1.0
+
 ## New features
 
-* [`.by`/`by`](https://dplyr.tidyverse.org/dev/reference/dplyr_by.html) is an
+* [`.by`/`by`](https://dplyr.tidyverse.org/reference/dplyr_by.html) is an
   experimental alternative to `group_by()` that supports per-operation grouping
   for `mutate()`, `summarise()`, `filter()`, and the `slice()` family (#6528).
   
@@ -301,6 +330,9 @@ package, bringing greater consistency and improved performance.
     
   * Error if `n` is not an integer. `nth(x, n = 2)` is fine, but 
     `nth(x, n = 2.5)` is now an error.
+    
+  * No longer support indexing into scalar objects, like `<lm>` or scalar S4
+    objects (#6670).
     
   Additionally, they have all gained an `na_rm` argument since they
   are summary functions (#6242, with contributions from @tnederlof).
