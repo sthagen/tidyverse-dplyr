@@ -233,14 +233,14 @@ slice_min.data.frame <- function(.data, order_by, ..., n, prop, by = NULL, with_
     local({
       n <- dplyr::n()
       order_by <- {{ order_by }}
-      vec_assert(order_by, size = n)
+      vec_check_size(order_by, size = n)
 
       slice_rank_idx(
         order_by,
         size(n),
         direction = "asc",
-        with_ties = with_ties,
-        na_rm = na_rm
+        with_ties = !!with_ties,
+        na_rm = !!na_rm
       )
     })
   )
@@ -273,15 +273,14 @@ slice_max.data.frame <- function(.data, order_by, ..., n, prop, by = NULL, with_
     local({
       n <- dplyr::n()
       order_by <- {{ order_by }}
-
-      vec_assert(order_by, size = n)
+      vec_check_size(order_by, size = n)
 
       slice_rank_idx(
         order_by,
         size(n),
         direction = "desc",
-        with_ties = with_ties,
-        na_rm = na_rm
+        with_ties = !!with_ties,
+        na_rm = !!na_rm
       )
     })
   )
@@ -319,9 +318,9 @@ slice_sample.data.frame <- function(.data, ..., n, prop, by = NULL, weight_by = 
 
       n <- dplyr::n()
       if (!is.null(weight_by)) {
-        weight_by <- vec_assert(weight_by, size = n, arg = "weight_by")
+        vec_check_size(weight_by, size = n)
       }
-      sample_int(n, size(n), replace = replace, wt = weight_by)
+      sample_int(n, size(n), replace = !!replace, wt = weight_by)
     })
   )
 }
@@ -546,7 +545,11 @@ slice_rank_idx <- function(
     na_rm = FALSE,
     call = caller_env()
 ) {
-  direction <- arg_match(direction, error_call = call)
+  direction <- arg_match0(
+    arg = direction,
+    values = c("asc", "desc"),
+    error_call = call
+  )
   # puts missing values at the end
   na_value <- if (direction == "asc") "largest" else "smallest"
   ties <- if (with_ties) "min" else "sequential"

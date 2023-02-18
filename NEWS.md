@@ -1,5 +1,20 @@
 # dplyr (development version)
 
+* `group_data()` on ungrouped data frames is faster (#6736).
+
+* `n()` is now a little faster when there are many groups (#6727).
+
+* `if_else()` and `case_when()` again accept logical conditions that have
+  attributes (#6678).
+
+* `slice_sample()` now works when the input has a column named `replace`.
+  `slice_min()` and `slice_max()` now work when the input has columns named
+  `na_rm` or `with_ties` (#6725).
+
+* A major performance regression in `case_when()` has been fixed. It is still a
+  little slower than in dplyr 1.0.10, but we plan to improve this further in the
+  future (#6674).
+
 * Fixed an issue where expressions involving infix operators had an abnormally
   large amount of overhead (#6681).
 
