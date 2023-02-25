@@ -1,5 +1,51 @@
 # dplyr (development version)
 
+* All major dplyr verbs now throw an informative error message if the input
+  data frame contains a column named `NA` or `""` (#6758).
+
+* Mutating joins now warn about multiple matches much less often. At a high
+  level, a warning was previously being thrown when a one-to-many or
+  many-to-many relationship was detected between the keys of `x` and `y`, but is
+  now only thrown for a many-to-many relationship, which is much rarer and much
+  more dangerous than one-to-many because it can result in a Cartesian explosion
+  in the number of rows returned from the join (#6731, #6717).
+  
+  We've accomplished this in two steps:
+  
+  * `multiple` now defaults to `"all"`, and the options of `"error"` and
+    `"warning"` are now deprecated in favor of using `relationship` (see below).
+    We are using an accelerated deprecation process for these two options
+    because they've only been available for a few weeks, and `relationship` is
+    a clearly superior alternative.
+    
+  * The mutating joins gain a new `relationship` argument, allowing you to
+    optionally enforce one of the following relationship constraints between the
+    keys of `x` and `y`: `"one-to-one"`, `"one-to-many"`, `"many-to-one"`, or
+    `"many-to-many"`.
+    
+    For example, `"many-to-one"` enforces that each row in `x` can match at
+    most 1 row in `y`. If a row in `x` matches >1 rows in `y`, an error is
+    thrown. This option serves as the replacement for `multiple = "error"`.
+    
+    The default behavior of `relationship` doesn't assume that there is any
+    relationship between `x` and `y`. However, for equality joins it will check
+    for the presence of a many-to-many relationship, and will warn if it detects
+    one.
+    
+  This change unfortunately does mean that if you have set `multiple = "all"` to
+  avoid a warning and you happened to be doing a many-to-many style join, then
+  you will need to replace `multiple = "all"` with
+  `relationship = "many-to-many"` to silence the new warning, but we believe
+  this should be rare since many-to-many relationships are fairly uncommon.
+
+* `pick()` now returns a 1 row, 0 column tibble when `...` evaluates to an
+  empty selection. This makes it more compatible with [tidyverse recycling
+  rules](https://vctrs.r-lib.org/reference/vector_recycling_rules.html) in some
+  edge cases (#6685).
+
+* The compatibility vignette has been replaced with a more general vignette on
+  using dplyr in packages, `vignette("in-packages")` (#6702).
+
 * `group_data()` on ungrouped data frames is faster (#6736).
 
 * `n()` is now a little faster when there are many groups (#6727).
@@ -356,6 +402,11 @@ package, bringing greater consistency and improved performance.
   `if_else()` now takes the common type of `true`, `false`, and `missing` to
   determine the output type, meaning that you can now reliably use `NA`,
   rather than `NA_character_` and friends (#6243).
+  
+  `if_else()` also no longer allows you to supply `NULL` for either `true` or
+  `false`, which was an undocumented usage that we consider to be off-label,
+  because `true` and `false` are intended to be (and documented to be) vector
+  inputs (#6730).
 
 * `na_if()` (#6329) now casts `y` to the type of `x` before comparison, which 
   makes it clearer that this function is type and size stable on `x`. In

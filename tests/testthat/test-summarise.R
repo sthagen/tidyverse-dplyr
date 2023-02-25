@@ -186,6 +186,11 @@ test_that("assigning with `<-` doesn't affect the mask (#6666)", {
   expect_identical(out$y, c(5.5, 7.5))
 })
 
+test_that("summarise() correctly auto-names expressions (#6741)", {
+  df <- tibble(a = 1L)
+  expect_identical(summarise(df, sum(-a)), tibble("sum(-a)" = -1L))
+})
+
 # grouping ----------------------------------------------------------------
 
 test_that("peels off a single layer of grouping", {
@@ -411,6 +416,18 @@ test_that("summarise() preserves the call stack on error (#5308)", {
   )
 
   expect_true(some(stack, is_call, "foobar"))
+})
+
+test_that("`summarise()` doesn't allow data frames with missing or empty names (#6758)", {
+  df1 <- new_data_frame(set_names(list(1), ""))
+  df2 <- new_data_frame(set_names(list(1), NA_character_))
+
+  expect_snapshot(error = TRUE, {
+    summarise(df1)
+  })
+  expect_snapshot(error = TRUE, {
+    summarise(df2)
+  })
 })
 
 test_that("summarise() gives meaningful errors", {
