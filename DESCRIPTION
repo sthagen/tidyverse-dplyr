@@ -12,7 +12,7 @@ Authors@R: c(
            comment = c(ORCID = "0000-0002-1416-3412")),
     person("Davis", "Vaughan", , "davis@posit.co", role = "aut",
            comment = c(ORCID = "0000-0003-4777-038X")),
-    person("Posit, PBC", role = c("cph", "fnd"))
+    person("Posit Software, PBC", role = c("cph", "fnd"))
   )
 Description: A fast, consistent tool for working with data frame like
     objects, both in memory and out of memory.
@@ -31,7 +31,7 @@ Imports:
     pillar (>= 1.5.1),
     R6,
     rlang (>= 1.0.6.9000),
-    tibble (>= 2.1.3),
+    tibble (>= 3.2.0),
     tidyselect (>= 1.2.0),
     utils,
     vctrs (>= 0.5.2.9000)
