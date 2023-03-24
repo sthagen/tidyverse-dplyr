@@ -1,5 +1,9 @@
 # dplyr (development version)
 
+* Joins better handle key columns will all `NA`s (#6804).
+
+# dplyr 1.1.1
+
 * Mutating joins now warn about multiple matches much less often. At a high
   level, a warning was previously being thrown when a one-to-many or
   many-to-many relationship was detected between the keys of `x` and `y`, but is
