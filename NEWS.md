@@ -1,5 +1,13 @@
 # dplyr (development version)
 
+* New `slice_sample()` example showing how to use it to shuffle rows (#7707, @Hzanib).
+
+* Updated `across()` examples to include an example using `everything()` (#7621, @JBrandenburg02).
+
+* Clarified how `slice_min()` and `slice_max()` work in the introduction vignette (#7717, @ccani007).
+
+* `reframe()` has moved from experimental to stable (#7713, @VisruthSK).
+
 * The base pipe is now used throughout the documentation (#7711).
 
 * R >=4.1.0 is now required, in line with the [tidyverse
