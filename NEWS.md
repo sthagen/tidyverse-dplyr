@@ -1,5 +1,43 @@
 # dplyr (development version)
 
+* In `case_when()`, supplying all size 1 LHS inputs along with a size >1 RHS input is now soft-deprecated. This is an improper usage of `case_when()` that should instead be a series of if statements, like:
+
+  ```
+  # Scalars!
+  code <- 1L
+  flavor <- "vanilla"
+
+  # Previously
+  case_when(
+    code == 1L && flavor == "chocolate" ~ x,
+    code == 1L && flavor == "vanilla" ~ y,
+    code == 2L && flavor == "vanilla" ~ z,
+    .default = default
+  )
+
+  # Now
+  if (code == 1L && flavor == "chocolate") {
+    x
+  } else if (code == 1L && flavor == "vanilla") {
+    y
+  } else if (code == 2L && flavor == "vanilla") {
+    z
+  } else {
+    default
+  }
+  ```
+
+  The recycling behavior that allows this style of `case_when()` to work is unsafe, and can result in silent bugs that we'd like to guard against with an error in the future (#7082).
+
+* The following vector functions have gotten significantly faster and use much less memory due to a rewrite in C via vctrs (#7723):
+
+  * `if_else()`
+  * `coalesce()`
+
+* `if_else()` no longer allows `condition` to be a logical array. It must be a logical vector with no `dim` attribute (#7723).
+
+* Passing `size` to `if_else()` is now deprecated. The output size is always taken from the `condition` (#7722).
+
 * `bind_rows()` now replaces empty (or `NA`) element names in a list with its numeric index while preserving existing names (#7719, @Meghansaha).
 
 * New `slice_sample()` example showing how to use it to shuffle rows (#7707, @Hzanib).
